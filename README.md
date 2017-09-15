@@ -1,4 +1,4 @@
-# Beacon
+# Beacon (frontend)
 
 > An app for connecting with those around you
 
