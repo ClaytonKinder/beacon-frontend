@@ -9,7 +9,7 @@
           <slot name="card1-title"></slot>
         </q-card-title>
         <q-card-main class="info-text row justify-center">
-          <p class="col col-lg-10 col-md-11 col-sm-6 col-xs-10">
+          <p class="col col-xl-7 col-lg-10 col-md-11 col-sm-6 col-xs-10">
             <slot name="card1-text"></slot>
           </p>
         </q-card-main>
@@ -24,7 +24,7 @@
           <slot name="card2-title"></slot>
         </q-card-title>
         <q-card-main class="info-text row justify-center">
-          <p class="col col-lg-10 col-md-11 col-sm-6 col-xs-10">
+          <p class="col col-xl-7 col-lg-10 col-md-11 col-sm-6 col-xs-10">
             <slot name="card2-text"></slot>
           </p>
         </q-card-main>
@@ -39,7 +39,7 @@
           <slot name="card3-title"></slot>
         </q-card-title>
         <q-card-main class="info-text row justify-center">
-          <p class="col col-lg-10 col-md-11 col-sm-6 col-xs-10">
+          <p class="col col-xl-7 col-lg-10 col-md-11 col-sm-6 col-xs-10">
             <slot name="card3-text"></slot>
           </p>
         </q-card-main>

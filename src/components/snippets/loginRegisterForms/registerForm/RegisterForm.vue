@@ -69,7 +69,6 @@
 <script>
 import { QBtn, QField, QInput, QInnerLoading, QSpinnerGears } from 'quasar'
 import { required, email, sameAs } from 'vuelidate/lib/validators'
-import EventBus from 'buses/EventBus.js'
 
 export default {
   name: 'RegisterForm',
@@ -116,12 +115,12 @@ export default {
   methods: {
     emitRegister () {
       this.loading = true
-      EventBus.$emit('emitRegister', this.formData)
+      this.$q.events.$emit('emitRegister', this.formData)
     }
   },
   mounted () {
     const vm = this
-    EventBus.$on('loaded', function (loadedName) {
+    this.$q.events.$on('loaded', function (loadedName) {
       if (loadedName === 'registerForm') {
         vm.loading = false
       }

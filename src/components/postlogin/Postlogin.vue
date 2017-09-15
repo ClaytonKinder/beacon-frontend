@@ -11,6 +11,9 @@
         <router-view></router-view>
       </div>
     </div>
+    <audio id="horn">
+      <source src="statics/audio/horn.mp3" type="audio/mpeg">
+    </audio>
   </q-layout>
 </template>
 
@@ -30,9 +33,13 @@ import {
 } from 'quasar'
 import PostloginHeader from 'components/postlogin/header/Header'
 import Sidebar from 'components/postlogin/sidebar/Sidebar'
+import UserService from 'services/userService.js'
+import Toast from 'mixins/Toast.js'
+import store from 'store'
 
 export default {
   name: 'postlogin',
+  mixins: [Toast],
   components: {
     QLayout,
     QToolbar,
@@ -46,7 +53,8 @@ export default {
     QItemMain,
     QSideLink,
     PostloginHeader,
-    Sidebar
+    Sidebar,
+    Toast
   },
   data () {
     return {}
@@ -57,7 +65,24 @@ export default {
   methods: {
     toggleRight: function () {
       this.$refs.layout.toggleRight()
+    },
+    updateUserSettings: function (data) {
+      UserService.updateUserSettings(data).then(response => {
+        this.$q.events.$emit('loaded', 'settingsForm', true)
+        store.commit('updateUser', response.body)
+        this.createToast('positive', 'Your settings were successfully updated')
+      }).catch(err => {
+        console.error(err)
+        this.$q.events.$emit('loaded', 'settingsForm')
+        this.createToast('negative', err.body.message)
+      })
     }
+  },
+  mounted () {
+    const vm = this
+    this.$q.events.$on('emitUpdateUserSettings', function (data) {
+      vm.updateUserSettings(data)
+    })
   }
 }
 </script>

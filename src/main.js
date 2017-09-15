@@ -22,8 +22,6 @@ Vue.use(VueResource)
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    // this route requires auth, check if logged in
-    // if not, redirect to login page.
     authService.isAuth().then(response => {
       store.commit('updateUser', response.body)
       next(response.body)
@@ -35,8 +33,6 @@ router.beforeEach((to, from, next) => {
     })
   }
   else if (to.matched.some(record => record.meta.onlyIfLoggedOut)) {
-    // this route requires auth, check if logged in
-    // if not, redirect to login page.
     authService.isAuth().then(response => {
       store.commit('updateUser', response.body)
       next('/app/beacon')
@@ -45,7 +41,7 @@ router.beforeEach((to, from, next) => {
     })
   }
   else {
-    next() // make sure to always call next()!
+    next()
   }
 })
 

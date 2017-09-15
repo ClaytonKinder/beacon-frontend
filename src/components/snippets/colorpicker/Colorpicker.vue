@@ -1,24 +1,18 @@
 <template>
   <div>
     <q-field
-      :label="'Color (' + colors.hex + ')'"
+      :label="label + ' (' + color.toUpperCase() + ')'"
+      :labelWidth="11"
     >
     </q-field>
-    <q-btn
-      outline
-      @click.prevent="$refs.colorpickerModal.open()"
-      class="block full-width colorpicker-button relative-position"
-      v-bind:style="{background: style + ' !important'}"
-    >
-
-    </q-btn>
-    <q-modal
-      minimized
-      class="colorpicker-modal"
-      ref="colorpickerModal"
-    >
-      <chrome v-model="colors" @change-color="colorChange"></chrome>
-    </q-modal>
+    <div class="colorpicker-block">
+      <div
+        class="colorpicker-wrapper relative-position"
+        v-bind:style="{background: color + ' !important'}"
+      >
+        <input type="color" v-model="color" class="full-width colorpicker" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -31,73 +25,56 @@ import {
   QInput,
   QModal
 } from 'quasar'
-import { Chrome } from 'vue-color'
 
 export default {
   name: 'ColorPicker',
+  props: ['label'],
   components: {
     QBtn,
     QIcon,
     QCard,
     QField,
     QInput,
-    QModal,
-    Chrome
+    QModal
   },
   data () {
     return {
-      colors: {
-        hex: '#194d33',
-        hsl: {
-          h: 150,
-          s: 0.5,
-          l: 0.2,
-          a: 1
-        },
-        hsv: {
-          h: 150,
-          s: 0.66,
-          v: 0.30,
-          a: 1
-        },
-        rgba: {
-          r: 25,
-          g: 77,
-          b: 51,
-          a: 1
-        },
-        a: 1
-      }
+      color: this.$store.state.user.settings.defaultColor || '#FF0000'
     }
   },
-  computed: {
-    style () {
-      return this.colors.hex
-    },
-    formData () {
-      return {
-        name: null,
-        description: null,
-        color: this.style
-      }
-    }
-  },
-  methods: {
-    colorChange (val) {
-      this.colors = val
-      this.$emit('colorChange', this.colors)
+  watch: {
+    'color': function () {
+      this.$q.events.$emit('changeColor', this.color)
     }
   },
   created () {
-    this.colorChange(this.colors)
+    setTimeout(() => {
+      this.$q.events.$emit('changeColor', this.color)
+    }, 1)
   }
 }
 </script>
 
 <style lang="stylus">
-  .colorpicker-button
-    border-color rgba(0,0,0,0.12) !important
-  .colorpicker-modal
-    .modal-content
-      min-width auto !important
+  .colorpicker-block
+    padding 1px
+    background rgba(0,0,0,0.12)
+    cursor pointer
+  .colorpicker-wrapper
+    height 40px
+    cursor pointer
+  .colorpicker
+    cursor pointer
+    height 100%
+    position absolute
+    top 0
+    right 0
+    bottom 0
+    left 0
+    padding: 0
+    padding-bottom 0
+    border: 0
+    opacity 0
+    &:focus
+      outline 0
 </style>

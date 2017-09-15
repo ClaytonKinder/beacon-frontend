@@ -36,7 +36,6 @@
 <script>
 import { QBtn, QField, QInput, QInnerLoading, QSpinnerGears } from 'quasar'
 import { required, email } from 'vuelidate/lib/validators'
-import EventBus from 'buses/EventBus.js'
 
 export default {
   name: 'LoginForm',
@@ -71,12 +70,12 @@ export default {
   methods: {
     emitLogin () {
       this.loading = true
-      EventBus.$emit('emitLogin', this.formData)
+      this.$q.events.$emit('emitLogin', this.formData)
     }
   },
   mounted () {
     const vm = this
-    EventBus.$on('loaded', function (loadedName) {
+    this.$q.events.$on('loaded', function (loadedName) {
       if (loadedName === 'loginForm') {
         vm.loading = false
       }

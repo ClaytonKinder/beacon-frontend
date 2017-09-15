@@ -1,5 +1,5 @@
 <template>
-  <q-toolbar slot="header" color="primary">
+  <q-toolbar slot="header">
     <q-toolbar-title>
       Beacon
     </q-toolbar-title>
@@ -24,6 +24,10 @@ export default {
 }
 </script>
 
-<style lang="stylus">
-
+<style lang="stylus" scoped>
+  .q-toolbar
+    position absolute
+    top 0
+    width 100%
+    background transparent
 </style>

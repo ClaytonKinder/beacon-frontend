@@ -33,7 +33,8 @@ import {
   QItem,
   QItemSide,
   QItemMain,
-  QSideLink
+  QSideLink,
+  QTransition
 } from 'quasar'
 
 export default {
@@ -49,7 +50,8 @@ export default {
     QItem,
     QItemSide,
     QItemMain,
-    QSideLink
+    QSideLink,
+    QTransition
   },
   data () {
     return {}

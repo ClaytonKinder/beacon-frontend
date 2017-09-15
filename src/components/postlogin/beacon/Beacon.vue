@@ -1,10 +1,10 @@
 <template>
   <div>
-    <q-card class="beacon-card">
+    <q-card class="beacon-card" color="white">
       <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
-        Activate Beacon
+        Light Beacon
       </q-card-title>
-      <form class="relative-position" name="beaconForm" @submit.prevent="lightBeacon">
+      <form class="relative-position" name="beaconForm" @submit.prevent>
         <q-field
           :error="$v.formData.name.$dirty && $v.formData.name.$invalid"
           error-label="Please enter a name for your beacon"
@@ -30,20 +30,18 @@
             :min-rows="4"
           />
         </q-field>
-        <colorpicker v-on:colorChange="setColor()"></colorpicker>
+        <colorpicker label="Color"></colorpicker>
         <q-field
           class="text-center toggle-field"
         >
           <q-toggle
             @change="lightBeacon"
+            :disable="$v.formData.$invalid"
             v-model="formData.beaconLit"
           />
         </q-field>
       </form>
     </q-card>
-    <audio id="horn">
-      <source src="statics/audio/horn.mp3" type="audio/mpeg">
-    </audio>
   </div>
 </template>
 
@@ -73,17 +71,14 @@ export default {
     QToggle,
     Colorpicker
   },
-  computed: {
-    style () {
-      if (this.colors) return this.colors.hex
-      return '#FFFFFF'
-    },
-    formData () {
-      return {
-        name: null,
-        description: null,
-        color: this.style,
-        beaconLit: false
+  data () {
+    return {
+      formData: {
+        name: 'Test Name',
+        description: 'Test Description',
+        color: null,
+        beaconLit: this.$store.state.beaconLit,
+        location: null
       }
     }
   },
@@ -101,18 +96,26 @@ export default {
   methods: {
     lightBeacon (e) {
       store.commit('updateBeaconLit', this.formData.beaconLit)
-      if (this.formData.beaconLit) {
+      if (this.formData.beaconLit && (this.$store.state.user.settings.playSound || false)) {
         document.getElementById('horn').play()
       }
-    },
-    setColor (colors) {
-      this.colors = colors
+    }
+  },
+  mounted () {
+    const vm = this
+    this.$q.events.$on('changeColor', function (color) {
+      vm.formData.color = color
+    })
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        this.formData.location = position.coords
+      }.bind(this))
     }
   }
 }
 </script>
 
-<style lang="stylus">
+<style lang="stylus" scoped>
   .beacon-card
     .beacon-card-title
       color: white
