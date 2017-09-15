@@ -12,4 +12,8 @@
 export default {}
 </script>
 
-<style></style>
+<style lang="stylus">
+  html
+    max-width: 100vw
+    overflow-x: hidden
+</style>

@@ -25,10 +25,13 @@ export default new VueRouter({
     {
       path: '/',
       component: load('prelogin/Prelogin'),
+      meta: { onlyIfLoggedOut: true },
       children: [
         {
           path: '',
-          component: load('prelogin/home/Home')
+          components: {
+            default: load('prelogin/home/Home')
+          }
         }
       ]
     },
@@ -55,7 +58,5 @@ export default new VueRouter({
       path: '*',
       redirect: '/app/beacon'
     }
-    // Always leave this last one
-    // { path: '*', component: load('Error404') }
   ]
 })

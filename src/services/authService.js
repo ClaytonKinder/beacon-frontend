@@ -4,7 +4,10 @@ export default {
   isAuth () {
     return Vue.http.post('auth/isauth')
   },
-  login (email, password) {
-    return Vue.http.post('auth/authenticate', {email, password})
+  login (data) {
+    return Vue.http.post('auth/authenticate', data)
+  },
+  register (data) {
+    return Vue.http.post('auth/register', data)
   }
 }

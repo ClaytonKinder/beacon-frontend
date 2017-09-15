@@ -34,6 +34,16 @@ router.beforeEach((to, from, next) => {
       })
     })
   }
+  else if (to.matched.some(record => record.meta.onlyIfLoggedOut)) {
+    // this route requires auth, check if logged in
+    // if not, redirect to login page.
+    authService.isAuth().then(response => {
+      store.commit('updateUser', response.body)
+      next('/app/beacon')
+    }).catch(() => {
+      next()
+    })
+  }
   else {
     next() // make sure to always call next()!
   }
@@ -56,8 +66,8 @@ if (__THEME === 'mat') {
   require('quasar-extras/roboto-font')
 }
 import 'quasar-extras/material-icons'
-// import 'quasar-extras/ionicons'
-// import 'quasar-extras/fontawesome'
+import 'quasar-extras/ionicons'
+import 'quasar-extras/fontawesome'
 // import 'quasar-extras/animate'
 
 Vue.http.options.root = 'http://localhost:7777/api/v1/'
