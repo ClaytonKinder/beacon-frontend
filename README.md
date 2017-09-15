@@ -1,6 +1,6 @@
-# Quasar App
+# Beacon
 
-> A Quasar project
+> An app for connecting with those around you
 
 ## Build Setup
 
