@@ -5,8 +5,7 @@ Vue.use(Vuex)
 
 const store = new Vuex.Store({
   state: {
-    user: null,
-    beaconLit: false
+    user: null
   },
   getters: {
     getUser: state => {
@@ -20,8 +19,11 @@ const store = new Vuex.Store({
     deleteUser: (state) => {
       state.user = null
     },
-    updateBeaconLit: (state, value) => {
-      state.beaconLit = value
+    lightBeacon: (state, beacon) => {
+      state.user.beacon = beacon
+    },
+    extinguishBeacon: (state) => {
+      state.user.beacon = null
     }
   }
 })

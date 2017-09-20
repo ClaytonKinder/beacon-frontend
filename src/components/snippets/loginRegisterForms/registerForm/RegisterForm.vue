@@ -84,7 +84,7 @@ export default {
       formData: {
         firstName: 'test',
         lastName: 'man',
-        email: 'test1@test.com',
+        email: 'test@test.com',
         password: 'test123',
         passwordConfirmation: 'test123'
       },

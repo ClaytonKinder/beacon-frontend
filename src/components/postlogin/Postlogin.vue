@@ -6,11 +6,12 @@
   >
     <postlogin-header v-on:toggleRight="toggleRight"></postlogin-header>
     <sidebar slot="right"></sidebar>
-    <div class="layout-padding row justify-center">
+    <!-- <div class="layout-padding row justify-center">
       <div class="postlogin-page-wrapper">
         <router-view></router-view>
       </div>
-    </div>
+    </div> -->
+    <router-view></router-view>
     <audio id="horn">
       <source src="statics/audio/horn.mp3" type="audio/mpeg">
     </audio>
@@ -35,7 +36,8 @@ import PostloginHeader from 'components/postlogin/header/Header'
 import Sidebar from 'components/postlogin/sidebar/Sidebar'
 import UserService from 'services/userService.js'
 import Toast from 'mixins/Toast.js'
-import store from 'store'
+import BeaconService from 'services/beaconService.js'
+// import store from 'store'
 
 export default {
   name: 'postlogin',
@@ -69,11 +71,30 @@ export default {
     updateUserSettings: function (data) {
       UserService.updateUserSettings(data).then(response => {
         this.$q.events.$emit('loaded', 'settingsForm', true)
-        store.commit('updateUser', response.body)
+        this.$store.commit('updateUser', response.body)
         this.createToast('positive', 'Your settings were successfully updated')
       }).catch(err => {
-        console.error(err)
         this.$q.events.$emit('loaded', 'settingsForm')
+        this.createToast('negative', err.body.message)
+      })
+    },
+    lightBeacon: function (data) {
+      BeaconService.lightBeacon(data).then(response => {
+        this.$q.events.$emit('loaded', 'beaconForm', true)
+        this.$store.commit('lightBeacon', response.body)
+        this.createToast('positive', 'Your beacon has been successfully lit')
+      }).catch(err => {
+        this.$q.events.$emit('loaded', 'beaconForm')
+        this.createToast('negative', err.body.message)
+      })
+    },
+    extinguishBeacon: function (userId) {
+      BeaconService.extinguishBeacon(userId).then(response => {
+        this.$store.commit('extinguishBeacon')
+        this.$q.events.$emit('loaded', 'beaconForm', true)
+        this.createToast('positive', 'Your beacon has been successfully extinguished')
+      }).catch(err => {
+        this.$q.events.$emit('loaded', 'beaconForm')
         this.createToast('negative', err.body.message)
       })
     }
@@ -82,6 +103,12 @@ export default {
     const vm = this
     this.$q.events.$on('emitUpdateUserSettings', function (data) {
       vm.updateUserSettings(data)
+    })
+    this.$q.events.$on('emitLightBeacon', function (data) {
+      vm.lightBeacon(data)
+    })
+    this.$q.events.$on('emitExtinguishBeacon', function (userId) {
+      vm.extinguishBeacon(userId)
     })
   }
 }

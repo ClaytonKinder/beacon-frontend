@@ -5,12 +5,12 @@
       :labelWidth="11"
     >
     </q-field>
-    <div class="colorpicker-block">
+    <div class="colorpicker-block" v-bind:class="{ disabled: isDisabled }">
       <div
         class="colorpicker-wrapper relative-position"
         v-bind:style="{background: color + ' !important'}"
       >
-        <input type="color" v-model="color" class="full-width colorpicker" />
+        <input type="color" :disabled="isDisabled" v-model="color" class="full-width colorpicker" />
       </div>
     </div>
   </div>
@@ -28,7 +28,7 @@ import {
 
 export default {
   name: 'ColorPicker',
-  props: ['label'],
+  props: ['label', 'isDisabled'],
   components: {
     QBtn,
     QIcon,
@@ -60,6 +60,8 @@ export default {
     padding 1px
     background rgba(0,0,0,0.12)
     cursor pointer
+    &.disabled
+      opacity: 0.6
   .colorpicker-wrapper
     height 40px
     cursor pointer
@@ -75,6 +77,8 @@ export default {
     padding-bottom 0
     border: 0
     opacity 0
+    &:disabled
+      opacity 0 !important
     &:focus
       outline 0
 </style>

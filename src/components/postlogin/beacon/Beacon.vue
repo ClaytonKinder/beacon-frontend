@@ -1,47 +1,68 @@
 <template>
-  <div>
-    <q-card class="beacon-card" color="white">
-      <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
-        Light Beacon
-      </q-card-title>
-      <form class="relative-position" name="beaconForm" @submit.prevent>
-        <q-field
-          :error="$v.formData.name.$dirty && $v.formData.name.$invalid"
-          error-label="Please enter a name for your beacon"
-        >
-          <q-input
-            type="text"
-            v-model.trim="formData.name"
-            @blur="$v.formData.name.$touch()"
-            float-label="Name"
-          />
-        </q-field>
-        <q-field
-          :error="$v.formData.description.$dirty && $v.formData.description.$invalid"
-          error-label="Please enter a description for your beacon with a maximum length of 140 characters"
-        >
-          <q-input
-            type="textarea"
-            v-model.trim="formData.description"
-            @blur="$v.formData.description.$touch()"
-            float-label="Description"
-            max-length="140"
-            :max-height="100"
-            :min-rows="4"
-          />
-        </q-field>
-        <colorpicker label="Color"></colorpicker>
-        <q-field
-          class="text-center toggle-field"
-        >
-          <q-toggle
-            @change="lightBeacon"
-            :disable="$v.formData.$invalid"
-            v-model="formData.beaconLit"
-          />
-        </q-field>
-      </form>
-    </q-card>
+  <div class="layout-padding row justify-center">
+    <div class="postlogin-page-wrapper">
+      <q-card class="beacon-card" color="white" v-if="locationAllowed">
+        <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
+          {{ formData.beaconLit ? 'Extinguish' : 'Light' }} Beacon
+        </q-card-title>
+        <form class="relative-position" name="beaconForm" @submit.prevent>
+          <q-field
+            :error="$v.formData.name.$dirty && $v.formData.name.$invalid"
+            error-label="Please enter a name for your beacon"
+          >
+            <q-input
+              type="text"
+              v-model.trim="formData.name"
+              @blur="$v.formData.name.$touch()"
+              float-label="Name"
+              :disable="formData.beaconLit"
+            />
+          </q-field>
+          <q-field
+            :error="$v.formData.description.$dirty && $v.formData.description.$invalid"
+            error-label="Please enter a description for your beacon with a maximum length of 140 characters"
+          >
+            <q-input
+              type="textarea"
+              v-model.trim="formData.description"
+              @blur="$v.formData.description.$touch()"
+              float-label="Description"
+              :disable="formData.beaconLit"
+              max-length="140"
+              :max-height="100"
+              :min-rows="4"
+            />
+          </q-field>
+          <colorpicker
+            :isDisabled="formData.beaconLit"
+            label="Color"
+          ></colorpicker>
+          <q-field
+            class="text-center toggle-field"
+          >
+            <q-toggle
+              @change="toggleBeacon"
+              :disable="$v.formData.$invalid"
+              v-model="formData.beaconLit"
+            />
+          </q-field>
+          <q-inner-loading :visible="loading">
+            <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+          </q-inner-loading>
+        </form>
+      </q-card>
+      <q-card class="beacon-card no-location" v-if="!locationAllowed">
+        <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
+          <i class="icon ion-flame"></i>
+          <h6>Beacon needs your current location :(</h6>
+        </q-card-title>
+        <div class="no-location-main">
+          <p class="text-center">
+            Please allow your browser access to your location in order to continue
+          </p>
+        </div>
+      </q-card>
+    </div>
   </div>
 </template>
 
@@ -53,10 +74,11 @@ import {
   QField,
   QInput,
   QModal,
-  QToggle
+  QToggle,
+  QInnerLoading,
+  QSpinnerGears
 } from 'quasar'
 import { required, maxLength } from 'vuelidate/lib/validators'
-import store from 'store'
 import Colorpicker from 'components/snippets/colorpicker/Colorpicker'
 
 export default {
@@ -69,7 +91,9 @@ export default {
     QInput,
     QModal,
     QToggle,
-    Colorpicker
+    Colorpicker,
+    QInnerLoading,
+    QSpinnerGears
   },
   data () {
     return {
@@ -77,9 +101,15 @@ export default {
         name: 'Test Name',
         description: 'Test Description',
         color: null,
-        beaconLit: this.$store.state.beaconLit,
-        location: null
-      }
+        beaconLit: (this.$store.state.user.beacon !== null),
+        location: {
+          type: 'Point',
+          coordinates: []
+        },
+        author: this.$store.state.user._id
+      },
+      loading: false,
+      locationAllowed: true
     }
   },
   validations: {
@@ -94,11 +124,20 @@ export default {
     }
   },
   methods: {
-    lightBeacon (e) {
-      store.commit('updateBeaconLit', this.formData.beaconLit)
-      if (this.formData.beaconLit && (this.$store.state.user.settings.playSound || false)) {
-        document.getElementById('horn').play()
+    toggleBeacon (e) {
+      this.loading = true
+      if (this.formData.beaconLit) {
+        if (this.$store.state.user.settings.playSound || false) {
+          document.getElementById('horn').play()
+        }
+        this.$q.events.$emit('emitLightBeacon', this.formData)
       }
+      else {
+        this.$q.events.$emit('emitExtinguishBeacon', this.formData.author)
+      }
+    },
+    openNavigator () {
+      console.log('Opening navigator!')
     }
   },
   mounted () {
@@ -106,10 +145,23 @@ export default {
     this.$q.events.$on('changeColor', function (color) {
       vm.formData.color = color
     })
+    this.$q.events.$on('loaded', function (loadedName) {
+      if (loadedName === 'beaconForm') {
+        vm.loading = false
+      }
+    })
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(function (position) {
-        this.formData.location = position.coords
-      }.bind(this))
+        this.locationAllowed = true
+        this.formData.location.coordinates[0] = position.coords.longitude
+        this.formData.location.coordinates[1] = position.coords.latitude
+      }.bind(this), function (err) {
+        if (err.code === err.PERMISSION_DENIED) {
+          this.locationAllowed = false
+        }
+      }.bind(this), {
+        enableHighAccuracy: true
+      })
     }
   }
 }
@@ -117,6 +169,11 @@ export default {
 
 <style lang="stylus" scoped>
   .beacon-card
+    &.no-location
+      i
+        font-size 4rem
+      .no-location-main
+        padding 1rem 0
     .beacon-card-title
       color: white
     form

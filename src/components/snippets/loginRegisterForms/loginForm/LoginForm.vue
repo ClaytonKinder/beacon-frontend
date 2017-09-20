@@ -49,8 +49,8 @@ export default {
   data () {
     return {
       formData: {
-        email: 'test@test.com',
-        password: 'test123'
+        email: 'solaireastora@gmail.com',
+        password: 'solaire123'
       },
       loading: false
     }

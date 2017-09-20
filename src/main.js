@@ -17,16 +17,22 @@ import VueResource from 'vue-resource'
 import authService from './services/authService'
 import store from './store'
 import Vuelidate from 'vuelidate'
+import * as VueGoogleMaps from 'vue2-google-maps'
 Vue.use(Vuelidate)
 Vue.use(VueResource)
+Vue.use(VueGoogleMaps, {
+  load: {
+    key: 'AIzaSyAwwtBhx5Dl1zguEqBSxz3rU4IGHmbxG3I',
+    libraries: 'places'
+  }
+})
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     authService.isAuth().then(response => {
       store.commit('updateUser', response.body)
       next(response.body)
-    }).catch(err => {
-      console.error(err)
+    }).catch(() => {
       next({
         path: '/'
       })
@@ -73,6 +79,7 @@ Quasar.start(() => {
     el: '#q-app',
     router,
     store,
+    VueGoogleMaps,
     render: h => h(require('./App'))
   })
 })

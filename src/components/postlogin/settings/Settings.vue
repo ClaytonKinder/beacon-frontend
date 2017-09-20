@@ -1,42 +1,51 @@
 <template>
-  <q-card class="settings-card relative-position" color="white">
-    <q-card-title class="uppercase settings-card-title text-center block bg-primary">
-      Update Settings
-    </q-card-title>
-    <form class="relative-position" name="beaconForm" @submit.prevent="updateUserSettings">
-      <q-field
-        label="Play sound when lighting a beacon"
-        :labelWidth="11"
-      >
-      <q-toggle
-        v-model="formData.playSound"
-      />
-      </q-field>
-      <q-field
-        label="Unit of measurement"
-        :labelWidth="11"
-      >
-      </q-field>
-      <q-radio v-model="formData.unitOfMeasurement" val="miles" label="Miles" /><br/>
-      <q-radio v-model="formData.unitOfMeasurement" val="kilometers" label="Kilometers" />
-      <q-field
-        label="Search radius"
-        :labelWidth="11"
-      >
-
-      </q-field>
-      <q-slider v-model="formData.searchRadius" :min="1" :max="30" :label="true" />
-      <colorpicker @blur="$v.formData.description.$touch()" label="Default beacon color"></colorpicker>
-      <div class=" button-wrapper text-right">
-        <q-btn color="primary" :disabled="areObjectsEqual(originalData, formData)">
-          Update
-        </q-btn>
-      </div>
-    </form>
-    <q-inner-loading :visible="loading">
-      <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
-    </q-inner-loading>
-  </q-card>
+  <div class="layout-padding row justify-center">
+    <div class="postlogin-page-wrapper">
+      <q-card class="settings-card relative-position" color="white">
+        <q-card-title class="uppercase settings-card-title text-center block bg-primary">
+          Update Settings
+        </q-card-title>
+        <form class="relative-position" name="beaconForm" @submit.prevent="updateUserSettings">
+          <q-field
+            label="Play sound when lighting a beacon"
+            :labelWidth="11"
+          >
+          <q-toggle
+            v-model="formData.playSound"
+          />
+          </q-field>
+          <q-field
+            label="Unit of measurement"
+            :labelWidth="11"
+          >
+          </q-field>
+          <q-radio v-model="formData.unitOfMeasurement" val="miles" label="Miles" /><br/>
+          <q-radio v-model="formData.unitOfMeasurement" val="kilometers" label="Kilometers" />
+          <q-field
+            label="Search radius"
+            :labelWidth="11"
+          >
+          </q-field>
+          <q-slider v-model="formData.searchRadius" :min="1" :max="30" :label="true" />
+          <q-field
+            label="Nearby beacon limit"
+            :labelWidth="11"
+          >
+          </q-field>
+          <q-slider v-model="formData.beaconLimit" :min="1" :max="100" :label="true" />
+          <colorpicker @blur="$v.formData.description.$touch()" label="Default beacon color"></colorpicker>
+          <div class=" button-wrapper text-right">
+            <q-btn color="primary" :disabled="areObjectsEqual(originalData, formData)">
+              Update
+            </q-btn>
+          </div>
+        </form>
+        <q-inner-loading :visible="loading">
+          <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+        </q-inner-loading>
+      </q-card>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -74,10 +83,11 @@ export default {
   data () {
     return {
       formData: this.$store.state.user.settings || {
+        beaconLimit: 55,
+        defaultColor: '#FF0000',
         playSound: false,
         unitOfMeasurement: 'miles',
-        searchRadius: 15,
-        defaultColor: '#FF0000'
+        searchRadius: 15
       },
       originalData: null,
       loading: false

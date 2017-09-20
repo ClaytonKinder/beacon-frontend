@@ -1,10 +1,10 @@
 <template>
-  <header>
+  <header id="appHeader">
     <q-toolbar slot="header" color="primary">
       <q-toolbar-title>
         Beacon
-        <div slot="subtitle" v-if="this.$store.state.beaconLit">Active</div>
-        <div slot="subtitle" v-if="!this.$store.state.beaconLit">Inactive</div>
+        <div slot="subtitle" v-if="this.$store.state.user && this.$store.state.user.beacon">Active</div>
+        <div slot="subtitle" v-if="this.$store.state.user && !this.$store.state.user.beacon">Inactive</div>
       </q-toolbar-title>
       <q-btn
         flat
