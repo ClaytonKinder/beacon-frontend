@@ -20,7 +20,7 @@
       <i slot="card3-icon" class="fa fa-plug"></i>
       <h4 slot="card3-title" class="thin uppercase no-margin">Connect</h4>
       <span slot="card3-text">
-        Connect with other beacons to stoke the flame and shine that much brighter to others on the map. Make friends, communicate, and change the world together.
+        Connect with other beacons to stoke the flame and shine that much brighter to others on the map. Make friends, communicate, and take on the world together.
       </span>
     </triple-icon-cards>
   </div>
