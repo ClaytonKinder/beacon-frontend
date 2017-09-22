@@ -82,11 +82,11 @@ export default {
   data () {
     return {
       formData: {
-        firstName: 'test',
-        lastName: 'man',
-        email: 'test@test.com',
-        password: 'test123',
-        passwordConfirmation: 'test123'
+        firstName: 'Clayton',
+        lastName: 'Kinder',
+        email: 'ClaytonAlanKinder@gmail.com',
+        password: 'clayton123',
+        passwordConfirmation: 'clayton123'
       },
       loading: false
     }
@@ -107,6 +107,7 @@ export default {
         required
       },
       passwordConfirmation: {
+        required,
         sameAsPassword: sameAs('password')
       }
     }

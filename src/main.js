@@ -33,6 +33,7 @@ router.beforeEach((to, from, next) => {
       store.commit('updateUser', response.body)
       next(response.body)
     }).catch(() => {
+      localStorage.setItem('userId', '')
       next({
         path: '/'
       })

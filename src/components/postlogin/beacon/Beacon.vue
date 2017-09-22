@@ -33,10 +33,24 @@
               :min-rows="4"
             />
           </q-field>
-          <colorpicker
+          <!-- <colorpicker
             :isDisabled="formData.beaconLit"
             label="Color"
-          ></colorpicker>
+            origin="beaconForm"
+          ></colorpicker> -->
+          <q-field
+            :label="'Color (' + formData.color.toUpperCase() + ')'"
+            :labelWidth="11"
+          >
+          </q-field>
+          <div class="colorpicker-block" v-bind:class="{ disabled: formData.beaconLit }">
+            <div
+              class="colorpicker-wrapper relative-position"
+              v-bind:style="{background: formData.color + ' !important'}"
+            >
+              <input type="color" :disabled="formData.beaconLit" v-model="formData.color" class="full-width colorpicker" />
+            </div>
+          </div>
           <q-field
             class="text-center toggle-field"
           >
@@ -54,7 +68,7 @@
       <q-card class="beacon-card no-location" v-if="!locationAllowed">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           <i class="icon ion-flame"></i>
-          <h6>Beacon needs your current location :(</h6>
+          <h6>Beacon needs your current location</h6>
         </q-card-title>
         <div class="no-location-main">
           <p class="text-center">
@@ -79,7 +93,6 @@ import {
   QSpinnerGears
 } from 'quasar'
 import { required, maxLength } from 'vuelidate/lib/validators'
-import Colorpicker from 'components/snippets/colorpicker/Colorpicker'
 
 export default {
   name: 'Beacon',
@@ -91,16 +104,15 @@ export default {
     QInput,
     QModal,
     QToggle,
-    Colorpicker,
     QInnerLoading,
     QSpinnerGears
   },
   data () {
     return {
       formData: {
-        name: 'Test Name',
-        description: 'Test Description',
-        color: null,
+        name: '',
+        description: '',
+        color: this.$store.state.user.settings.defaultColor || '#FF0000',
         beaconLit: (this.$store.state.user.beacon !== null),
         location: {
           type: 'Point',
@@ -142,9 +154,10 @@ export default {
   },
   mounted () {
     const vm = this
-    this.$q.events.$on('changeColor', function (color) {
-      vm.formData.color = color
-    })
+    if (this.$store.state.user.beacon) {
+      this.formData = this.$store.state.user.beacon
+      this.formData.beaconLit = true
+    }
     this.$q.events.$on('loaded', function (loadedName) {
       if (loadedName === 'beaconForm') {
         vm.loading = false

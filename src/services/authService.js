@@ -9,5 +9,8 @@ export default {
   },
   register (data) {
     return Vue.http.post('auth/register', data)
+  },
+  checkIfEmailIsUnique (email) {
+    return Vue.http.post(`auth/checkifemailisunique/${email}`)
   }
 }

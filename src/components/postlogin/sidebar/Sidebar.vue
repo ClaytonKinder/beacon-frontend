@@ -3,15 +3,16 @@
     <q-list class="no-padding" no-border link inset-delimiter>
       <div class="sidebar-header column justify-end no-wrap">
         <div class="sidebar-image">
-          
+
         </div>
         <div v-if="this.$store.state.user">
+          <img class="sidebar-image" :src="this.$store.state.user.gravatar" />
           <h5 class="sidebar-name">
             {{this.$store.state.user.firstName}} {{this.$store.state.user.lastName}}
           </h5>
         </div>
       </div>
-      <q-side-link item to="/account">
+      <q-side-link item to="account">
         <q-item-side icon="account circle" />
         <q-item-main label="Account" />
       </q-side-link>
@@ -65,8 +66,12 @@ export default {
     height 122px
     padding 1rem
     color white
-    background url('~/statics/images/lighthouse.jpg') 0% 20%
+    background url('~/assets/images/lighthouse.jpg') 0% 20%
     background-size: 150%
+    .sidebar-image
+      height 3rem
+      width 3rem
+      border-radius 50%
     .sidebar-name
       margin-bottom 0
 </style>

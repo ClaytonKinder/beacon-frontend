@@ -77,7 +77,7 @@ export default {
   .prelogin-page
     padding-bottom 100px
     .bg-lighthouse
-      background url('~/statics/images/lighthouse.jpg') 50% 40%
+      background url('~/assets/images/lighthouse.jpg') 50% 40%
     .prelogin-header
       height 50vh
       width 100%

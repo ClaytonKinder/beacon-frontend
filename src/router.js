@@ -41,6 +41,10 @@ export default new VueRouter({
       meta: { requiresAuth: true },
       children: [
         {
+          path: 'account',
+          component: load('postlogin/account/Account')
+        },
+        {
           path: 'beacon',
           component: load('postlogin/beacon/Beacon')
         },

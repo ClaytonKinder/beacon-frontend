@@ -6,5 +6,15 @@ export default {
   },
   updateUserSettings (data) {
     return Vue.http.post('user/updateusersettings', data)
+  },
+  updateUserInformation (data) {
+    return Vue.http.post('user/updateuserinformation', data)
+  },
+  updateUserEmail (data) {
+    return Vue.http.post('user/updateuseremail', data)
+  },
+  updateUserPassword (data) {
+    console.log(data)
+    return Vue.http.post('user/updateuserpassword', data)
   }
 }

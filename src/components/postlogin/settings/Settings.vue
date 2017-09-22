@@ -33,7 +33,19 @@
           >
           </q-field>
           <q-slider v-model="formData.beaconLimit" :min="1" :max="100" :label="true" />
-          <colorpicker @blur="$v.formData.description.$touch()" label="Default beacon color"></colorpicker>
+          <q-field
+            :label="'Default beacon color (' + formData.defaultColor.toUpperCase() + ')'"
+            :labelWidth="11"
+          >
+          </q-field>
+          <div class="colorpicker-block">
+            <div
+              class="colorpicker-wrapper relative-position"
+              v-bind:style="{background: formData.defaultColor + ' !important'}"
+            >
+              <input type="color" v-model="formData.defaultColor" class="full-width colorpicker" />
+            </div>
+          </div>
           <div class=" button-wrapper text-right">
             <q-btn color="primary" :disabled="areObjectsEqual(originalData, formData)">
               Update
@@ -55,14 +67,12 @@ import {
   QCardTitle,
   QField,
   QInput,
-  QModal,
   QToggle,
   QSlider,
   QRadio,
   QInnerLoading,
   QSpinnerGears
 } from 'quasar'
-import Colorpicker from 'components/snippets/colorpicker/Colorpicker'
 
 export default {
   name: 'settings',
@@ -72,13 +82,11 @@ export default {
     QCardTitle,
     QField,
     QInput,
-    QModal,
     QToggle,
     QSlider,
     QRadio,
     QInnerLoading,
-    QSpinnerGears,
-    Colorpicker
+    QSpinnerGears
   },
   data () {
     return {
@@ -108,10 +116,10 @@ export default {
   },
   mounted () {
     const vm = this
-    this.$q.events.$on('changeColor', function (color) {
+    this.$q.events.$on('changeColorSettings', function (color) {
       vm.formData.defaultColor = color
     })
-    this.$q.events.$once('changeColor', function (color) {
+    this.$q.events.$once('changeColorSettings', function (color) {
       vm.originalData.defaultColor = color
     })
     this.$q.events.$on('loaded', function (loadedName, success) {
