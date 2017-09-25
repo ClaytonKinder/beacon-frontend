@@ -14,6 +14,7 @@
               >
                 <q-input
                   type="text"
+                  max-length="50"
                   v-model.trim="informationFormData.firstName"
                   @blur="$v.informationFormData.firstName.$touch()"
                   float-label="First Name"
@@ -25,12 +26,23 @@
               >
                 <q-input
                   type="text"
+                  max-length="50"
                   v-model.trim="informationFormData.lastName"
                   @blur="$v.informationFormData.lastName.$touch()"
                   float-label="Last Name"
                 />
               </q-field>
-              <q-datetime float-label="Date of birth" v-model="informationFormData.dateOfBirth" type="date" />
+              <q-field
+                :error="$v.informationFormData.dateOfBirth.$dirty && $v.informationFormData.dateOfBirth.$invalid"
+                error-label="Please enter a past date"
+              >
+                <q-datetime
+                  float-label="Date of birth"
+                  @blur="$v.informationFormData.dateOfBirth.$touch()"
+                  v-model="informationFormData.dateOfBirth"
+                  type="date"
+                />
+              </q-field>
               <q-field
                 label="Gender"
                 :labelWidth="11"
@@ -54,6 +66,7 @@
               >
                 <q-input
                   type="email"
+                  max-length="100"
                   v-model.trim="emailFormData.email"
                   float-label="Email"
                   @input="delayTouch($v.emailFormData.email)"
@@ -75,6 +88,7 @@
               >
                 <q-input
                   type="password"
+                  max-length="50"
                   v-model.trim="passwordFormData.currentPassword"
                   @blur="$v.passwordFormData.currentPassword.$touch()"
                   float-label="Current password"
@@ -86,6 +100,7 @@
               >
                 <q-input
                   type="password"
+                  max-length="50"
                   v-model.trim="passwordFormData.newPassword"
                   @blur="$v.passwordFormData.newPassword.$touch()"
                   float-label="New password"
@@ -97,6 +112,7 @@
               >
                 <q-input
                   type="password"
+                  max-length="50"
                   v-model.trim="passwordFormData.newPasswordConfirmation"
                   @blur="$v.passwordFormData.newPasswordConfirmation.$touch()"
                   float-label="Confirm new password"
@@ -138,7 +154,7 @@ import {
   QInnerLoading,
   QSpinnerGears
 } from 'quasar'
-import { required, email, sameAs } from 'vuelidate/lib/validators'
+import { required, email, sameAs, maxLength, minLength } from 'vuelidate/lib/validators'
 import AuthService from 'services/authService.js'
 import Toast from 'mixins/Toast.js'
 
@@ -189,16 +205,28 @@ export default {
   validations: {
     informationFormData: {
       firstName: {
-        required
+        required,
+        maxLength: maxLength(50)
       },
       lastName: {
-        required
+        required,
+        maxLength: maxLength(50)
+      },
+      dateOfBirth: {
+        required,
+        isInThePast (value) {
+          let date = new Date(value)
+          let now = new Date()
+          now.setHours(0, 0, 0, 0)
+          return (date < now)
+        }
       }
     },
     emailFormData: {
       email: {
         required,
         email,
+        maxLength: maxLength(100),
         isUnique (email) {
           if (email.trim() === '') return true
           this.emailErrorText = ''
@@ -221,13 +249,19 @@ export default {
     },
     passwordFormData: {
       currentPassword: {
-        required
+        required,
+        minLength: minLength(8),
+        maxLength: maxLength(50)
       },
       newPassword: {
-        required
+        required,
+        minLength: minLength(8),
+        maxLength: maxLength(50)
       },
       newPasswordConfirmation: {
         required,
+        minLength: minLength(8),
+        maxLength: maxLength(50),
         sameAsPassword: sameAs('newPassword')
       }
     }

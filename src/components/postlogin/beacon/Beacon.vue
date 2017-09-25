@@ -12,6 +12,7 @@
           >
             <q-input
               type="text"
+              max-length="100"
               v-model.trim="formData.name"
               @blur="$v.formData.name.$touch()"
               float-label="Name"
@@ -33,11 +34,6 @@
               :min-rows="4"
             />
           </q-field>
-          <!-- <colorpicker
-            :isDisabled="formData.beaconLit"
-            label="Color"
-            origin="beaconForm"
-          ></colorpicker> -->
           <q-field
             :label="'Color (' + formData.color.toUpperCase() + ')'"
             :labelWidth="11"
@@ -50,6 +46,9 @@
             >
               <input type="color" :disabled="formData.beaconLit" v-model="formData.color" class="full-width colorpicker" />
             </div>
+          </div>
+          <div class="additional-settings-wrapper text-center">
+            <a @click.prevent="$refs.additionalSettingsModal.open()">Additional settings</a>
           </div>
           <q-field
             class="text-center toggle-field"
@@ -76,6 +75,66 @@
           </p>
         </div>
       </q-card>
+      <q-modal class="footer-no-shadow additional-settings-modal mobile-modal-padding" ref="additionalSettingsModal" :content-css="{minWidth: '400px', minHeight: '500px'}">
+        <q-modal-layout class="additionalSettingsModal">
+          <q-toolbar
+            slot="header"
+          >
+            <div class="q-toolbar-title">
+              Additional Settings
+            </div>
+          </q-toolbar>
+          <div class="modal-body">
+            <form name="additionalSettingsForm">
+              <q-field
+                label="Appear to"
+                :labelWidth="11"
+              >
+              </q-field>
+              <q-radio v-model="additionalSettings.genderRestriction" :val="null" label="Everyone" :disable="formData.beaconLit" /><br/>
+              <q-radio v-model="additionalSettings.genderRestriction" val="maleOnly" label="Males only" :disable="formData.beaconLit" /><br/>
+              <q-radio v-model="additionalSettings.genderRestriction" val="femaleOnly" label="Females only" :disable="formData.beaconLit" />
+
+              <q-field
+                :label="'Age Range (' + additionalSettings.ageRange.min + ' to ' + additionalSettings.ageRange.max + ')'"
+                :labelWidth="11"
+              >
+              </q-field>
+              <q-range
+                v-model="additionalSettings.ageRange"
+                :min="18"
+                :max="100"
+                label
+                :disable="formData.beaconLit"
+              />
+              <q-field
+                :error="$v.additionalSettings.beaconPassword.$dirty && $v.additionalSettings.beaconPassword.$invalid"
+                error-label="Password must be at least 8 characters long"
+              >
+                <q-input
+                  type="password"
+                  v-model.trim="additionalSettings.beaconPassword"
+                  @blur="$v.additionalSettings.beaconPassword.$touch()"
+                  float-label="Connection password"
+                  :disable="formData.beaconLit"
+                />
+              </q-field>
+              <q-field
+                :error="checkTagErrors()"
+                error-label="There is a maximum of 5 tags consisting of 20 characters each"
+              >
+                <q-chips-input :disable="formData.beaconLit" v-model="additionalSettings.tags" float-label="Enter up to 5 tags" />
+              </q-field>
+            </form>
+          </div>
+          <q-toolbar color="white" slot="footer">
+            <div class="q-toolbar-title text-right">
+              <q-btn flat color="primary" @click="$refs.additionalSettingsModal.close()">Close</q-btn>
+              <q-btn color="primary" @click="updateAdditionalSettings(), $refs.additionalSettingsModal.close()" :disable="$v.additionalSettings.$invalid || formData.beaconLit">Update Settings</q-btn>
+            </div>
+          </q-toolbar>
+        </q-modal-layout>
+      </q-modal>
     </div>
   </div>
 </template>
@@ -88,11 +147,16 @@ import {
   QField,
   QInput,
   QModal,
+  QModalLayout,
+  QRadio,
+  QRange,
   QToggle,
+  QToolbar,
+  QChipsInput,
   QInnerLoading,
   QSpinnerGears
 } from 'quasar'
-import { required, maxLength } from 'vuelidate/lib/validators'
+import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 
 export default {
   name: 'Beacon',
@@ -103,7 +167,12 @@ export default {
     QField,
     QInput,
     QModal,
+    QModalLayout,
+    QRadio,
+    QRange,
     QToggle,
+    QToolbar,
+    QChipsInput,
     QInnerLoading,
     QSpinnerGears
   },
@@ -118,7 +187,17 @@ export default {
           type: 'Point',
           coordinates: []
         },
-        author: this.$store.state.user._id
+        author: this.$store.state.user._id,
+        additionalSettings: null
+      },
+      additionalSettings: {
+        beaconPassword: null,
+        ageRange: {
+          min: 18,
+          max: 100
+        },
+        genderRestriction: null,
+        tags: []
       },
       loading: false,
       locationAllowed: true
@@ -127,11 +206,23 @@ export default {
   validations: {
     formData: {
       name: {
-        required
+        required,
+        maxLength: maxLength(100)
       },
       description: {
         required,
         maxLength: maxLength(140)
+      }
+    },
+    additionalSettings: {
+      beaconPassword: {
+        minLength: minLength(8)
+      },
+      tags: {
+        maxLength: maxLength(5),
+        $each: {
+          maxLength: maxLength(20)
+        }
       }
     }
   },
@@ -148,8 +239,17 @@ export default {
         this.$q.events.$emit('emitExtinguishBeacon', this.formData.author)
       }
     },
-    openNavigator () {
-      console.log('Opening navigator!')
+    updateAdditionalSettings () {
+      this.formData.additionalSettings = this.additionalSettings
+    },
+    checkTagErrors () {
+      if (this.$v.additionalSettings.tags.$dirty && this.$v.additionalSettings.tags.$invalid) return true
+      for (var i = 0; i < 5; i++) {
+        if (this.$v.additionalSettings.tags.$each[i]) {
+          if (this.$v.additionalSettings.tags.$each[i].$invalid) return true
+        }
+      }
+      return false
     }
   },
   mounted () {
@@ -194,6 +294,13 @@ export default {
   .toggle-field
     padding-top 2rem
     padding-bottom 1rem
+  .additional-settings-wrapper
+    padding-top 1rem
   .q-toggle
     transform scale(3)
+  .additional-settings-modal
+    .modal-body
+      overflow-x hidden
+    .q-slider
+      max-width 98%
 </style>

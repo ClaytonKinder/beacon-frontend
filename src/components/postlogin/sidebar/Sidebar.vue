@@ -6,9 +6,9 @@
 
         </div>
         <div v-if="this.$store.state.user">
-          <img class="sidebar-image" :src="this.$store.state.user.gravatar" />
+          <img class="circular profile" :src="this.$store.state.user.gravatar" />
           <h5 class="sidebar-name">
-            {{this.$store.state.user.firstName}} {{this.$store.state.user.lastName}}
+            {{this.$store.state.user.firstName}}
           </h5>
         </div>
       </div>
@@ -45,9 +45,6 @@ export default {
   data () {
     return {}
   },
-  computed: {
-
-  },
   methods: {
     toggleRight: function () {
       this.$emit('toggleRight')
@@ -68,10 +65,6 @@ export default {
     color white
     background url('~/assets/images/lighthouse.jpg') 0% 20%
     background-size: 150%
-    .sidebar-image
-      height 3rem
-      width 3rem
-      border-radius 50%
     .sidebar-name
       margin-bottom 0
 </style>

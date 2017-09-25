@@ -13,10 +13,10 @@
         <q-icon name="menu" />
       </q-btn>
     </q-toolbar>
-    <q-tabs slot="navigation">
-      <q-route-tab slot="title" name="beacon" icon="ion-flame" to="/app/beacon" replace hide="label" label="Beacon" />
-      <q-route-tab slot="title" name="map" icon="map" to="/app/map" replace hide="label" label="Map" />
-      <q-route-tab slot="title" name="settings" icon="settings" to="/app/settings" replace hide="label" label="Settings" />
+    <q-tabs v-model="tab" slot="navigation">
+      <q-route-tab slot="title" name="beacon" icon="ion-flame" to="/app/beacon" hide="label" label="Beacon" />
+      <q-route-tab slot="title" name="map" icon="map" to="/app/map" hide="label" label="Map" />
+      <q-route-tab slot="title" name="settings" icon="settings" to="/app/settings" hide="label" label="Settings" />
     </q-tabs>
   </header>
 </template>
@@ -54,13 +54,21 @@ export default {
     QTransition
   },
   data () {
-    return {}
+    return {
+      tabRoutes: ['/app/beacon', '/app/map', '/app/settings'],
+      tab: ''
+    }
   },
-  computed: {
-
+  watch: {
+    '$route': function (val) {
+      if (!this.tabRoutes.includes(val.path)) {
+        this.tab = ''
+      }
+    }
   },
   methods: {
     toggleRight: function () {
+      this.$q.events.$emit('emitResizeMap')
       this.$emit('toggleRight')
     }
   }

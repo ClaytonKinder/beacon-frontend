@@ -5,6 +5,7 @@
       error-label="Please enter your first name"
     >
       <q-input
+        max-length="50"
         type="text"
         v-model.trim="formData.firstName"
         @blur="$v.formData.firstName.$touch()"
@@ -16,6 +17,7 @@
       error-label="Please enter your last name"
     >
       <q-input
+        max-length="50"
         type="text"
         v-model.trim="formData.lastName"
         @blur="$v.formData.lastName.$touch()"
@@ -27,6 +29,7 @@
       error-label="Please enter a valid email address"
     >
       <q-input
+        max-length="50"
         type="email"
         v-model.trim="formData.email"
         float-label="Email"
@@ -34,10 +37,22 @@
       />
     </q-field>
     <q-field
+      :error="$v.formData.dateOfBirth.$dirty && $v.formData.dateOfBirth.$invalid"
+      error-label="Please enter a past date"
+    >
+      <q-datetime
+        float-label="Date of birth"
+        @blur="$v.formData.dateOfBirth.$touch()"
+        v-model="formData.dateOfBirth"
+        type="date"
+      />
+    </q-field>
+    <q-field
       :error="$v.formData.password.$dirty && $v.formData.password.$invalid"
-      error-label="Please enter a secure password"
+      error-label="Please enter a secure password that's between 8 and 50 characters"
     >
       <q-input
+        max-length="50"
         type="password"
         v-model.trim="formData.password"
         @blur="$v.formData.password.$touch()"
@@ -49,6 +64,7 @@
       error-label="Please make sure that this matches your password"
     >
       <q-input
+        max-length="50"
         type="password"
         v-model.trim="formData.passwordConfirmation"
         @blur="$v.formData.passwordConfirmation.$touch()"
@@ -67,8 +83,15 @@
 </template>
 
 <script>
-import { QBtn, QField, QInput, QInnerLoading, QSpinnerGears } from 'quasar'
-import { required, email, sameAs } from 'vuelidate/lib/validators'
+import {
+  QBtn,
+  QField,
+  QInput,
+  QInnerLoading,
+  QSpinnerGears,
+  QDatetime
+} from 'quasar'
+import { required, email, minLength, maxLength, sameAs } from 'vuelidate/lib/validators'
 
 export default {
   name: 'RegisterForm',
@@ -77,16 +100,18 @@ export default {
     QField,
     QInput,
     QInnerLoading,
-    QSpinnerGears
+    QSpinnerGears,
+    QDatetime
   },
   data () {
     return {
       formData: {
-        firstName: 'Clayton',
-        lastName: 'Kinder',
-        email: 'ClaytonAlanKinder@gmail.com',
-        password: 'clayton123',
-        passwordConfirmation: 'clayton123'
+        firstName: 'Hambone',
+        lastName: 'Fakenamington',
+        email: 'Hambone@gmail.com',
+        dateOfBirth: '1994-10-21T04:00:00.000Z',
+        password: 'hambone123',
+        passwordConfirmation: 'hambone123'
       },
       loading: false
     }
@@ -94,21 +119,37 @@ export default {
   validations: {
     formData: {
       firstName: {
-        required
+        required,
+        maxLength: maxLength(50)
       },
       lastName: {
-        required
+        required,
+        maxLength: maxLength(50)
       },
       email: {
         required,
-        email
+        email,
+        maxLength: maxLength(100)
+      },
+      dateOfBirth: {
+        required,
+        isInThePast (value) {
+          let date = new Date(value)
+          let now = new Date()
+          now.setHours(0, 0, 0, 0)
+          return (date < now)
+        }
       },
       password: {
-        required
+        required,
+        minLength: minLength(8),
+        maxLength: maxLength(50)
       },
       passwordConfirmation: {
         required,
-        sameAsPassword: sameAs('password')
+        sameAsPassword: sameAs('password'),
+        minLength: minLength(8),
+        maxLength: maxLength(50)
       }
     }
   },
