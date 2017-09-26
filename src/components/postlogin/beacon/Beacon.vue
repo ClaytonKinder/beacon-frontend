@@ -1,7 +1,7 @@
 <template>
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
-      <q-card class="beacon-card" color="white">
+      <q-card class="beacon-card" color="white" v-if="!doesObjectExist($store.state.user.connectionRequests.outgoing)">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           {{ formData.beaconLit ? 'Extinguish' : 'Light' }} Beacon
         </q-card-title>
@@ -63,6 +63,20 @@
             <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
           </q-inner-loading>
         </form>
+      </q-card>
+      <q-card class="beacon-card" v-if="doesObjectExist($store.state.user.connectionRequests.outgoing) && !doesObjectExist($store.state.user.beacon)">
+        <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
+          Awaiting Connection Approval
+        </q-card-title>
+        <div class="connection-body text-center">
+          <div>
+            <q-spinner color="primary" :size="50" />
+          </div>
+          <div class="connection-text">
+            You are currently waiting to be approved by {{ $store.state.user.connectionRequests.outgoing.ownerName }}
+          </div>
+          <q-btn color="primary" @click.prevent="cancelConnectionRequest($store.state.user.connectionRequests.outgoing)">Cancel connection request</q-btn>
+        </div>
       </q-card>
       <q-modal class="footer-no-shadow additional-settings-modal mobile-modal-padding" ref="additionalSettingsModal" :content-css="{minWidth: '400px', minHeight: '500px'}">
         <q-modal-layout class="additionalSettingsModal">
@@ -143,15 +157,19 @@ import {
   QToolbar,
   QChipsInput,
   QInnerLoading,
-  QSpinnerGears
+  QSpinnerGears,
+  QSpinner
 } from 'quasar'
 import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 import LocationService from 'services/locationService.js'
+import ConnectionService from 'services/connectionService.js'
+import BeaconService from 'services/beaconService.js'
 import Toast from 'mixins/Toast.js'
+import Helper from 'mixins/Helper.js'
 
 export default {
   name: 'Beacon',
-  mixins: [Toast],
+  mixins: [Toast, Helper],
   components: {
     QBtn,
     QCard,
@@ -166,7 +184,8 @@ export default {
     QToolbar,
     QChipsInput,
     QInnerLoading,
-    QSpinnerGears
+    QSpinnerGears,
+    QSpinner
   },
   data () {
     return {
@@ -224,10 +243,26 @@ export default {
         if (this.$store.state.user.settings.playSound || false) {
           document.getElementById('horn').play()
         }
-        this.$q.events.$emit('emitLightBeacon', this.formData)
+        BeaconService.lightBeacon(this.formData)
+          .then(response => {
+            this.loading = false
+            this.$store.commit('lightBeacon', response.body)
+          })
+          .catch(err => {
+            this.loading = false
+            this.createToast('negative', err.body.message)
+          })
       }
       else {
-        this.$q.events.$emit('emitExtinguishBeacon', this.formData.author)
+        BeaconService.extinguishBeacon(this.formData.author)
+          .then(response => {
+            this.loading = false
+            this.$store.commit('extinguishBeacon')
+          })
+          .catch(err => {
+            this.loading = false
+            this.createToast('negative', err.body.message)
+          })
       }
     },
     updateAdditionalSettings () {
@@ -241,19 +276,23 @@ export default {
         }
       }
       return false
+    },
+    cancelConnectionRequest (data) {
+      ConnectionService.cancelConnectionRequest(data)
+        .then((response) => {
+          this.$store.commit('updateUser', response.body)
+        })
+        .catch((error) => {
+          this.createToast('negative', error.body.message)
+        })
     }
   },
   mounted () {
     const vm = this
-    if (this.$store.state.user.beacon) {
+    if (this.doesObjectExist(this.$store.state.user.beacon)) {
       this.formData = this.$store.state.user.beacon
       this.formData.beaconLit = true
     }
-    this.$q.events.$on('loaded', function (loadedName) {
-      if (loadedName === 'beaconForm') {
-        vm.loading = false
-      }
-    })
     LocationService.getCurrentPosition().then(function (response) {
       vm.formData.location.coordinates[0] = response.body.location.lng
       vm.formData.location.coordinates[1] = response.body.location.lat
@@ -270,6 +309,10 @@ export default {
       color: white
     form
       padding 0rem 1rem 1.5rem
+    .connection-body
+      padding 1rem
+    .connection-text
+      padding 1rem 0
   .toggle-field
     padding-top 2rem
     padding-bottom 1rem

@@ -24,8 +24,8 @@
     </gmap-map>
     <q-modal
       ref="mapModal"
-      class="map-modal mobile-modal-padding footer-no-shadow"
-      :content-css="{minWidth: '400px', minHeight: '350px'}"
+      class="relative-position map-modal mobile-modal-padding footer-no-shadow"
+      :content-css="{minWidth: '400px', minHeight: '400px'}"
     >
       <q-modal-layout
         v-if="selectedBeacon"
@@ -47,18 +47,47 @@
             <p class="text-center">{{selectedBeacon.description}}</p>
           </div>
           <div class="beacon-tags">
-            <q-chip class="beacon-tag on-left" color="primary" square small v-for="tag in selectedBeacon.additionalSettings.tags" :key="tag">
+            <q-chip class="beacon-tag on-left" :color="getBeaconThemeColor(selectedBeacon)" square small v-for="tag in selectedBeacon.additionalSettings.tags" :key="tag">
               {{tag}}
             </q-chip>
+          </div>
+          <div v-if="connectionErrors.length">
+            <div class="info-block negative" v-for="error, key in connectionErrors" :key="key">
+              <q-icon name="fa-exclamation-circle"></q-icon>
+              <div color="negative">{{error}}</div>
+            </div>
           </div>
         </div>
         <q-toolbar class="bg-white" slot="footer">
           <div class="q-toolbar-title text-right">
             <q-btn flat color="primary" @click="$refs.mapModal.close()">Close</q-btn>
-            <q-btn color="primary" @click="connectToBeacon()">Connect</q-btn>
+            <q-btn
+              color="primary"
+              @click="severConnectionsToBeacon(selectedBeacon)"
+            >
+            Sever
+            </q-btn>
+            <q-btn
+              v-if="!selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect"
+              color="primary"
+              @click="createConnectionRequest(selectedBeacon)"
+            >
+            Connect
+            </q-btn>
+            <q-btn
+              v-if="selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect"
+              color="secondary"
+              icon="lock"
+              @click="createConnectionRequest(selectedBeacon)"
+            >
+            Connect with Password
+            </q-btn>
           </div>
         </q-toolbar>
       </q-modal-layout>
+      <q-inner-loading class="modal-inner-loading" :visible="modalLoading">
+        <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+      </q-inner-loading>
     </q-modal>
     <q-toolbar class="map-footer row justify-center items-center">
       <q-btn class="icon-button" flat icon="my_location" @click.prevent="centerMap()"></q-btn>
@@ -88,6 +117,7 @@ import {
 import BeaconService from 'services/beaconService'
 import Toast from 'mixins/Toast.js'
 import LocationService from 'services/locationService.js'
+import ConnectionService from 'services/connectionService.js'
 
 function hexToRgb (hex) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -114,6 +144,9 @@ export default {
   data () {
     return {
       loading: false,
+      modalLoading: false,
+      distanceInfo: null,
+      connectionErrors: [],
       mapOptions: {
         lat: 0,
         lng: 0,
@@ -139,16 +172,62 @@ export default {
     }
   },
   methods: {
+    severConnectionsToBeacon (beacon) {
+      let obj = {
+        beaconId: beacon._id,
+        beaconOwnerId: beacon.author._id,
+        userId: beacon.author._id
+      }
+      ConnectionService.severConnectionsToBeacon(obj)
+        .then((response) => {
+          console.log(response)
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    },
+    checkConnectionErrors (beacon, distance) {
+      this.connectionErrors = []
+      if (!distance.canConnect) {
+        this.connectionErrors.push('You are not close enough to connect')
+      }
+    },
     centerMap () {
       let latLng = new google.maps.LatLng(this.mapOptions.lat, this.mapOptions.lng)
       this.$refs.beaconMap.panTo(latLng)
     },
+    getBeaconThemeColor (beacon) {
+      return (beacon.additionalSettings.password) ? 'secondary' : 'primary'
+    },
     openMapModal (beacon) {
+      this.modalLoading = true
       this.selectedBeacon = beacon
       this.$refs.mapModal.open()
+      LocationService.getBeaconDistance(LocationService.createBeaconDistanceObject(beacon, this.currentPosition))
+        .then((response) => {
+          this.modalLoading = false
+          this.distanceInfo = response.body
+          this.checkConnectionErrors(beacon, this.distanceInfo)
+        })
+        .catch((error) => {
+          this.modalLoading = false
+          this.$refs.mapModal.close()
+          this.createToast('negative', error.body.message)
+        })
     },
-    connectToBeacon () {
-      console.log('Connecting to: ', this.selectedBeacon)
+    createConnectionRequest (beacon) {
+      this.modalLoading = true
+      let connectionObj = ConnectionService.createConnectionObject(beacon, this.$store.state.user, this.currentPosition)
+      ConnectionService.createConnectionRequest(connectionObj)
+        .then((response) => {
+          this.modalLoading = false
+          this.createToast('positive', 'Your connection request has been sent successfully')
+          this.$refs.mapModal.close()
+        })
+        .catch((error) => {
+          this.modalLoading = false
+          this.createToast('negative', error.body.message)
+        })
     },
     checkLightOrDarkText () {
       let rgb = hexToRgb(this.selectedBeacon.color)
@@ -209,6 +288,7 @@ export default {
   },
   mounted () {
     const vm = this
+    console.log(this.$store.state.user)
     this.$q.events.$on('emitResizeMap', function () {
       if (vm.$refs.beaconMap) {
         setTimeout(vm.$refs.beaconMap.resizePreserveCenter, 300)

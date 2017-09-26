@@ -11,9 +11,14 @@ export default {}
 </script>
 
 <style lang="stylus">
+  @import '~variables'
   html
     max-width: 100vw
     overflow-x: hidden
+  .color-white
+    color white
+  .modal-inner-loading
+    z-index 10000
   .icon-button
     i.on-left
       margin-right 0
@@ -30,6 +35,23 @@ export default {}
   .modal.footer-no-shadow
     .layout-footer
       box-shadow none
+  .info-block
+    padding 0.5rem 0.25rem
+    display flex
+    justify-content flex-start
+    align-items center
+    background $primary
+    color white
+    &:not(:first-of-type)
+      margin-top 0.5rem
+    &.negative
+      background $negative
+    .q-icon
+      height 100%
+      width 15%
+      font-size 1.4rem
+    div
+      width 85%
   @media screen and (max-width: 768px)
     .modal.mobile-modal-padding
       .q-toolbar-title

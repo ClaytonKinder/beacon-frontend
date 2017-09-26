@@ -3,8 +3,9 @@
     <q-toolbar slot="header" color="primary">
       <q-toolbar-title>
         Beacon
-        <div slot="subtitle" v-if="this.$store.state.user && this.$store.state.user.beacon">Active</div>
-        <div slot="subtitle" v-if="this.$store.state.user && !this.$store.state.user.beacon">Inactive</div>
+        <div slot="subtitle" v-if="checkBeaconStatus('active')">Active</div>
+        <div slot="subtitle" v-if="checkBeaconStatus('inactive')">Inactive</div>
+        <div slot="subtitle" v-if="checkBeaconStatus('awaitingConnectionApproval')">Awaiting connection approval</div>
       </q-toolbar-title>
       <q-btn
         flat
@@ -36,9 +37,11 @@ import {
   QSideLink,
   QTransition
 } from 'quasar'
+import Helper from 'mixins/Helper.js'
 
 export default {
   name: 'PostloginHeader',
+  mixins: [Helper],
   components: {
     QToolbar,
     QToolbarTitle,
@@ -67,9 +70,20 @@ export default {
     }
   },
   methods: {
-    toggleRight: function () {
+    toggleRight () {
       this.$q.events.$emit('emitResizeMap')
       this.$emit('toggleRight')
+    },
+    checkBeaconStatus (key) {
+      if (key === 'active') {
+        return (this.$store.state.user && this.$store.state.user.beacon)
+      }
+      else if (key === 'inactive') {
+        return (this.$store.state.user && !this.$store.state.user.beacon && !this.doesObjectExist(this.$store.state.user.connectionRequests.outgoing))
+      }
+      else if (key === 'awaitingConnectionApproval') {
+        return (this.$store.state.user && !this.$store.state.user.beacon && this.doesObjectExist(this.$store.state.user.connectionRequests.outgoing))
+      }
     }
   }
 }

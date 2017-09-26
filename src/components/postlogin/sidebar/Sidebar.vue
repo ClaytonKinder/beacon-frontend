@@ -18,7 +18,7 @@
       </q-side-link>
       <q-side-link item to="connection-inbox">
         <q-item-side icon="mail" />
-        <q-item-main label="Inbox <strong>(3 unread)</strong>" />
+        <q-item-main label="Inbox <strong>(3)</strong>" />
       </q-side-link>
       <q-item @click="logout()">
         <q-item-side icon="exit to app" />

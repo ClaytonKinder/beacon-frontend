@@ -1,10 +1,11 @@
 <template>
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
-      <div v-if="this.$store.state.user && this.$store.state.user.beacon">
-        <q-field class="no-margin">
-          <q-search inverted v-model="search" />
-        </q-field>
+      <q-card class="settings-card relative-position" v-if="this.$store.state.user && this.$store.state.user.beacon">
+        <q-card-title color="white" class="uppercase color-white text-center block bg-primary">
+          Inbox
+        </q-card-title>
+        <q-search class="no-margin" color="primary" inverted v-model="search" />
         <q-list separator>
           <q-item v-for="request in filteredRequests" key="request.fullName">
             <q-item-side class="text-center" left :avatar="request.image">
@@ -17,7 +18,10 @@
             </q-item-side>
           </q-item>
         </q-list>
-      </div>
+        <q-inner-loading :visible="loading">
+          <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+        </q-inner-loading>
+      </q-card>
       <q-card class="beacon-card no-beacon" v-if="this.$store.state.user && !this.$store.state.user.beacon">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           <i class="icon ion-flame"></i>

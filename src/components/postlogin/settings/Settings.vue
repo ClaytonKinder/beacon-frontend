@@ -2,7 +2,7 @@
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
       <q-card class="settings-card relative-position" color="white">
-        <q-card-title class="uppercase settings-card-title text-center block bg-primary">
+        <q-card-title class="uppercase color-white text-center block bg-primary">
           Update Settings
         </q-card-title>
         <form class="relative-position" name="beaconForm" @submit.prevent="updateUserSettings">
@@ -73,9 +73,12 @@ import {
   QInnerLoading,
   QSpinnerGears
 } from 'quasar'
+import UserService from 'services/userService.js'
+import Toast from 'mixins/Toast.js'
 
 export default {
-  name: 'settings',
+  name: 'Settings',
+  mixins: [Toast],
   components: {
     QBtn,
     QCard,
@@ -108,7 +111,17 @@ export default {
         userId: this.$store.state.user._id,
         settings: this.formData
       }
-      this.$q.events.$emit('emitUpdateUserSettings', obj)
+      UserService.updateUserSettings(obj)
+        .then(response => {
+          this.loading = false
+          this.$store.commit('updateUser', response.body)
+          this.originalData = JSON.parse(JSON.stringify(this.formData))
+          this.createToast('positive', 'Your settings were successfully updated')
+        })
+        .catch(error => {
+          this.loading = false
+          this.createToast('negative', error.body.message)
+        })
     },
     areObjectsEqual (obj1, obj2) {
       return JSON.stringify(obj1) === JSON.stringify(obj2)
@@ -122,14 +135,6 @@ export default {
     this.$q.events.$once('changeColorSettings', function (color) {
       vm.originalData.defaultColor = color
     })
-    this.$q.events.$on('loaded', function (loadedName, success) {
-      if (loadedName === 'settingsForm') {
-        vm.loading = false
-      }
-      if (success) {
-        vm.originalData = JSON.parse(JSON.stringify(vm.formData))
-      }
-    })
     this.originalData = JSON.parse(JSON.stringify(this.formData))
   }
 }
@@ -137,8 +142,6 @@ export default {
 
 <style lang="stylus">
   .settings-card
-    .settings-card-title
-      color: white
     form
       padding 0rem 1rem 1.5rem
       .q-field-label-inner

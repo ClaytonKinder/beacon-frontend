@@ -156,6 +156,7 @@ import {
 } from 'quasar'
 import { required, email, sameAs, maxLength, minLength } from 'vuelidate/lib/validators'
 import AuthService from 'services/authService.js'
+import UserService from 'services/userService.js'
 import Toast from 'mixins/Toast.js'
 
 const touchMap = new WeakMap()
@@ -270,19 +271,53 @@ export default {
     updateUserInformation () {
       if (!this.loading) {
         this.loading = true
-        this.$q.events.$emit('emitUpdateUserInformation', this.informationFormData)
+        UserService.updateUserInformation(this.informationFormData)
+          .then(response => {
+            this.loading = false
+            this.originalInformationFormData = JSON.parse(JSON.stringify(this.informationFormData))
+            this.$store.commit('updateUser', response.body)
+            this.createToast('positive', 'Your information was successfully updated')
+          })
+          .catch(err => {
+            this.loading = false
+            this.createToast('negative', err.body.message)
+          })
       }
     },
     updateUserEmail () {
       if (!this.loading) {
         this.loading = true
-        this.$q.events.$emit('emitUpdateUserEmail', this.emailFormData)
+        UserService.updateUserEmail(this.emailFormData)
+          .then(response => {
+            this.loading = false
+            this.originalEmailFormData = JSON.parse(JSON.stringify(this.emailFormData))
+            this.$store.commit('updateUser', response.body)
+            this.createToast('positive', 'Your email was successfully updated')
+          })
+          .catch(err => {
+            this.loading = false
+            this.createToast('negative', err.body.message)
+          })
       }
     },
     updateUserPassword () {
       if (!this.loading) {
         this.loading = true
-        this.$q.events.$emit('emitUpdateUserPassword', this.passwordFormData)
+        UserService.updateUserPassword(this.passwordFormData)
+          .then(response => {
+            this.loading = false
+            const passwordInputs = [...document.querySelectorAll('form[name="userPasswordForm"] input')]
+            passwordInputs.map(input => { input.blur() })
+            this.originalPasswordFormData = {}
+            this.passwordFormData = {}
+            this.$v.passwordFormData.$reset()
+            this.$store.commit('updateUser', response.body)
+            this.createToast('positive', 'Your password was successfully updated')
+          })
+          .catch(err => {
+            this.loading = false
+            this.createToast('negative', err.body.message)
+          })
       }
     },
     delayTouch ($v) {
@@ -297,24 +332,6 @@ export default {
     }
   },
   mounted () {
-    const vm = this
-    this.$q.events.$on('loaded', function (loadedName, success) {
-      if (['userInformationForm', 'userEmailForm', 'userPasswordForm'].includes(loadedName)) {
-        [...document.querySelectorAll('form[name="userPasswordForm"] input')].map(e => { e.blur() })
-        vm.loading = false
-        if (success && loadedName === 'userInformationForm') {
-          vm.originalInformationFormData = JSON.parse(JSON.stringify(vm.informationFormData))
-        }
-        else if (success && loadedName === 'userEmailForm') {
-          vm.originalEmailFormData = JSON.parse(JSON.stringify(vm.emailFormData))
-        }
-        else if (success && loadedName === 'userPasswordForm') {
-          vm.originalPasswordFormData = {}
-          vm.passwordFormData = {}
-          vm.$v.passwordFormData.$reset()
-        }
-      }
-    })
     this.originalInformationFormData = JSON.parse(JSON.stringify(this.informationFormData))
     this.originalEmailFormData = JSON.parse(JSON.stringify(this.emailFormData))
     this.originalPasswordFormData = JSON.parse(JSON.stringify(this.passwordFormData))
