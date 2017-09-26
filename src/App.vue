@@ -1,5 +1,4 @@
 <template>
-  <!-- Don't drop "q-app" class -->
   <div id="q-app">
     <router-view />
   </div>
@@ -7,10 +6,7 @@
 
 <script>
 import { AddressbarColor } from 'quasar'
-AddressbarColor.set('#027be3')
-/*
- * Root component
- */
+AddressbarColor.set('#0050b0')
 export default {}
 </script>
 
@@ -18,6 +14,11 @@ export default {}
   html
     max-width: 100vw
     overflow-x: hidden
+  .icon-button
+    i.on-left
+      margin-right 0
+    i.on-right
+      margin-left 0
   .modal
     .q-slider.with-padding
       padding-top 0
@@ -35,5 +36,4 @@ export default {}
         padding 0 1.5rem
       .modal-body
         padding 0 3rem
-
 </style>

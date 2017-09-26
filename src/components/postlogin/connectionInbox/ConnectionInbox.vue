@@ -12,8 +12,8 @@
             </q-item-side>
             <q-item-main :label="request.fullName" />
             <q-item-side right>
-              <q-btn flat class="text-center request-button" color="positive" icon="ion-checkmark-round"></q-btn>
-              <q-btn flat class="no-shadow text-center request-button" color="negative" icon="ion-close-round"></q-btn>
+              <q-btn flat class="text-center icon-button" color="positive" icon="ion-checkmark-round"></q-btn>
+              <q-btn flat class="no-shadow text-center icon-button" color="negative" icon="ion-close-round"></q-btn>
             </q-item-side>
           </q-item>
         </q-list>
@@ -101,9 +101,6 @@ export default {
 </script>
 
 <style lang="stylus">
-  .request-button
-    i.on-left
-      margin-right 0
   .q-card.no-beacon
     i
       font-size 4rem

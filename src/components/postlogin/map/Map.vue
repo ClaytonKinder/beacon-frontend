@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="relative-position">
     <q-window-resize-observable @resize="updateMapHeight" />
     <gmap-map
       ref="beaconMap"
@@ -60,6 +60,13 @@
         </q-toolbar>
       </q-modal-layout>
     </q-modal>
+    <q-toolbar class="map-footer row justify-center items-center">
+      <q-btn class="icon-button" flat icon="my_location" @click.prevent="centerMap()"></q-btn>
+      <q-btn class="icon-button" flat icon="ion-refresh" @click.prevent="loadMap()"></q-btn>
+    </q-toolbar>
+    <q-inner-loading :visible="loading">
+      <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+    </q-inner-loading>
   </div>
 </template>
 
@@ -71,7 +78,12 @@ import {
   QBtn,
   QIcon,
   QToolbar,
-  QChip
+  QToolbarTitle,
+  QChip,
+  QTabs,
+  QTab,
+  QInnerLoading,
+  QSpinnerGears
 } from 'quasar'
 import BeaconService from 'services/beaconService'
 import Toast from 'mixins/Toast.js'
@@ -92,11 +104,16 @@ export default {
     QBtn,
     QIcon,
     QToolbar,
-    QChip
+    QToolbarTitle,
+    QChip,
+    QTabs,
+    QTab,
+    QInnerLoading,
+    QSpinnerGears
   },
   data () {
     return {
-      locationAllowed: true,
+      loading: false,
       mapOptions: {
         lat: 0,
         lng: 0,
@@ -109,6 +126,10 @@ export default {
       selectedBeacon: null,
       markers: null,
       mapHeight: '400px',
+      currentPosition: {
+        lng: null,
+        lat: null
+      },
       controlOptions: {
         zoomControl: false,
         streetViewControl: false,
@@ -118,6 +139,10 @@ export default {
     }
   },
   methods: {
+    centerMap () {
+      let latLng = new google.maps.LatLng(this.mapOptions.lat, this.mapOptions.lng)
+      this.$refs.beaconMap.panTo(latLng)
+    },
     openMapModal (beacon) {
       this.selectedBeacon = beacon
       this.$refs.mapModal.open()
@@ -142,8 +167,44 @@ export default {
     updateMapHeight () {
       let windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
       let headerHeight = 122 // Header height stays consistent
-      this.mapHeight = windowHeight - headerHeight + 'px'
+      let footerHeight = 50 // Footer height stays consistent
+      this.mapHeight = windowHeight - headerHeight - footerHeight + 'px'
       this.$refs.beaconMap.resizePreserveCenter()
+    },
+    loadMap (vue) {
+      let vm = this || vue
+      vm.loading = true
+      LocationService.getCurrentPosition().then(function (response) {
+        let beacon = vm.$store.state.user.beacon
+        vm.mapOptions.lng = (beacon) ? beacon.location.coordinates[0] : response.body.location.lng
+        vm.mapOptions.lat = (beacon) ? beacon.location.coordinates[1] : response.body.location.lat
+        vm.currentPosition.lng = vm.mapOptions.lng
+        vm.currentPosition.lat = vm.mapOptions.lat
+        BeaconService.getNearbyBeacons(vm.mapOptions).then(response => {
+          let bounds = new google.maps.LatLngBounds()
+          response.body.map(marker => {
+            let position = {
+              lng: marker.location.coordinates[0],
+              lat: marker.location.coordinates[1]
+            }
+            marker.icon = new google.maps.MarkerImage('http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''), new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34))
+            marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.5 : 1
+            marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 1
+            marker.title = (marker.author._id === vm.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
+            bounds.extend(position)
+            marker.position = position
+          })
+          vm.$refs.beaconMap.fitBounds(bounds)
+          vm.markers = response.body
+          vm.loading = false
+        }).catch(error => {
+          vm.loading = false
+          vm.createToast('negative', error.body.message)
+        })
+      }).catch(function (err) {
+        vm.loading = false
+        this.createToast('negative', err.body.message)
+      })
     }
   },
   mounted () {
@@ -153,33 +214,7 @@ export default {
         setTimeout(vm.$refs.beaconMap.resizePreserveCenter, 300)
       }
     })
-    LocationService.getCurrentPosition().then(function (response) {
-      let beacon = vm.$store.state.user.beacon
-      vm.locationAllowed = true
-      vm.mapOptions.lng = (beacon) ? beacon.location.coordinates[0] : response.body.location.lng
-      vm.mapOptions.lat = (beacon) ? beacon.location.coordinates[1] : response.body.location.lat
-      BeaconService.getNearbyBeacons(vm.mapOptions).then(response => {
-        let bounds = new google.maps.LatLngBounds()
-        response.body.map(marker => {
-          let position = {
-            lng: marker.location.coordinates[0],
-            lat: marker.location.coordinates[1]
-          }
-          marker.icon = new google.maps.MarkerImage('http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''), new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34))
-          marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.5 : 1
-          marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 1
-          marker.title = (marker.author._id === vm.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
-          bounds.extend(position)
-          marker.position = position
-        })
-        vm.$refs.beaconMap.fitBounds(bounds)
-        vm.markers = response.body
-      }).catch(error => {
-        vm.createToast('negative', error.body.message)
-      })
-    }).catch(function () {
-      vm.locationAllowed = false
-    })
+    this.loadMap(vm)
   }
 }
 </script>
@@ -193,4 +228,10 @@ export default {
       padding-top 1rem
     .beacon-tag
       margin-bottom 0.5rem
+  .map-footer
+    height 50px
+    padding 0
+    .q-btn
+      flex 1
+      height 100%
 </style>
