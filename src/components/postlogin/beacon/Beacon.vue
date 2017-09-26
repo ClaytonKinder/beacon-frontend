@@ -157,6 +157,7 @@ import {
   QSpinnerGears
 } from 'quasar'
 import { required, minLength, maxLength } from 'vuelidate/lib/validators'
+import LocationService from 'services/locationService.js'
 
 export default {
   name: 'Beacon',
@@ -263,19 +264,13 @@ export default {
         vm.loading = false
       }
     })
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(function (position) {
-        this.locationAllowed = true
-        this.formData.location.coordinates[0] = position.coords.longitude
-        this.formData.location.coordinates[1] = position.coords.latitude
-      }.bind(this), function (err) {
-        if (err.code === err.PERMISSION_DENIED) {
-          this.locationAllowed = false
-        }
-      }.bind(this), {
-        enableHighAccuracy: true
-      })
-    }
+    LocationService.getCurrentPosition().then(function (response) {
+      vm.locationAllowed = true
+      vm.formData.location.coordinates[0] = response.body.location.lng
+      vm.formData.location.coordinates[1] = response.body.location.lat
+    }).catch(function () {
+      vm.locationAllowed = false
+    })
   }
 }
 </script>

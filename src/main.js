@@ -22,7 +22,7 @@ Vue.use(Vuelidate)
 Vue.use(VueResource)
 Vue.use(VueGoogleMaps, {
   load: {
-    key: 'AIzaSyAwwtBhx5Dl1zguEqBSxz3rU4IGHmbxG3I',
+    key: process.env.MAPS_API_KRY,
     libraries: 'places'
   }
 })
@@ -72,9 +72,8 @@ import 'quasar-extras/material-icons'
 import 'quasar-extras/ionicons'
 import 'quasar-extras/fontawesome'
 // import 'quasar-extras/animate'
+Vue.http.options.root = process.env.API_URL
 
-Vue.http.options.root = 'http://localhost:7777/api/v1/'
-// Vue.http.options.root = 'http://192.168.0.4:7777/api/v1/'
 Quasar.start(() => {
   /* eslint-disable no-new */
   new Vue({
