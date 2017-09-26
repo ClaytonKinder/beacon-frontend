@@ -18,6 +18,7 @@ import authService from './services/authService'
 import store from './store'
 import Vuelidate from 'vuelidate'
 import * as VueGoogleMaps from 'vue2-google-maps'
+
 Vue.use(Vuelidate)
 Vue.use(VueResource)
 Vue.use(VueGoogleMaps, {

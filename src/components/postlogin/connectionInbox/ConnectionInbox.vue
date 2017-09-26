@@ -5,7 +5,7 @@
         <q-field class="no-margin">
           <q-search inverted v-model="search" />
         </q-field>
-        <q-list inset-separator>
+        <q-list separator>
           <q-item v-for="request in filteredRequests" key="request.fullName">
             <q-item-side class="text-center" left :avatar="request.image">
               <q-item-tile stamp>10 min ago</q-item-tile>
