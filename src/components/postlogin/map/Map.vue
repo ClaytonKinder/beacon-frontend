@@ -153,43 +153,7 @@ export default {
         setTimeout(vm.$refs.beaconMap.resizePreserveCenter, 300)
       }
     })
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(function (position) {
-        let beacon = this.$store.state.user.beacon
-        this.locationAllowed = true
-        this.mapOptions.lng = (beacon) ? beacon.location.coordinates[0] : position.coords.longitude
-        this.mapOptions.lat = (beacon) ? beacon.location.coordinates[1] : position.coords.latitude
-        BeaconService.getNearbyBeacons(this.mapOptions).then(response => {
-          let bounds = new google.maps.LatLngBounds()
-          response.body.map(marker => {
-            let position = {
-              lng: marker.location.coordinates[0],
-              lat: marker.location.coordinates[1]
-            }
-            marker.icon = new google.maps.MarkerImage('http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''), new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34))
-            marker.opacity = (marker.author._id === this.$store.state.user._id) ? 0.5 : 1
-            marker.zIndex = (marker.author._id === this.$store.state.user._id) ? 10 : 1
-            marker.title = (marker.author._id === this.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
-            bounds.extend(position)
-            marker.position = position
-          })
-          this.$refs.beaconMap.fitBounds(bounds)
-          this.markers = response.body
-        }).catch(error => {
-          this.createToast('negative', error.body.message)
-        })
-      }.bind(this), function (err) {
-        if (err.code === err.PERMISSION_DENIED) {
-          this.locationAllowed = false
-        }
-      }.bind(this), {
-        enableHighAccuracy: true
-      })
-    }
     LocationService.getCurrentPosition().then(function (response) {
-      // vm.formData.location.coordinates[0] = response.body.location.lng
-      // vm.formData.location.coordinates[1] = response.body.location.lat
-      console.log(response)
       let beacon = vm.$store.state.user.beacon
       vm.locationAllowed = true
       vm.mapOptions.lng = (beacon) ? beacon.location.coordinates[0] : response.body.location.lng

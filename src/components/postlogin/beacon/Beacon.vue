@@ -1,7 +1,7 @@
 <template>
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
-      <q-card class="beacon-card" color="white" v-if="locationAllowed">
+      <q-card class="beacon-card" color="white">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           {{ formData.beaconLit ? 'Extinguish' : 'Light' }} Beacon
         </q-card-title>
@@ -63,17 +63,6 @@
             <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
           </q-inner-loading>
         </form>
-      </q-card>
-      <q-card class="beacon-card no-location" v-if="!locationAllowed">
-        <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
-          <i class="icon ion-flame"></i>
-          <h6>Beacon needs your current location</h6>
-        </q-card-title>
-        <div class="no-location-main">
-          <p class="text-center">
-            Please allow your browser access to your location in order to continue
-          </p>
-        </div>
       </q-card>
       <q-modal class="footer-no-shadow additional-settings-modal mobile-modal-padding" ref="additionalSettingsModal" :content-css="{minWidth: '400px', minHeight: '500px'}">
         <q-modal-layout class="additionalSettingsModal">
@@ -158,9 +147,11 @@ import {
 } from 'quasar'
 import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 import LocationService from 'services/locationService.js'
+import Toast from 'mixins/Toast.js'
 
 export default {
   name: 'Beacon',
+  mixins: [Toast],
   components: {
     QBtn,
     QCard,
@@ -200,8 +191,7 @@ export default {
         genderRestriction: null,
         tags: []
       },
-      loading: false,
-      locationAllowed: true
+      loading: false
     }
   },
   validations: {
@@ -265,11 +255,10 @@ export default {
       }
     })
     LocationService.getCurrentPosition().then(function (response) {
-      vm.locationAllowed = true
       vm.formData.location.coordinates[0] = response.body.location.lng
       vm.formData.location.coordinates[1] = response.body.location.lat
-    }).catch(function () {
-      vm.locationAllowed = false
+    }).catch(function (error) {
+      vm.createToast('negative', error.body.message)
     })
   }
 }
@@ -277,11 +266,6 @@ export default {
 
 <style lang="stylus" scoped>
   .beacon-card
-    &.no-location
-      i
-        font-size 4rem
-      .no-location-main
-        padding 1rem 0
     .beacon-card-title
       color: white
     form

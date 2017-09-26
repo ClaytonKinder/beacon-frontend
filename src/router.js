@@ -55,6 +55,10 @@ export default new VueRouter({
         {
           path: 'settings',
           component: load('postlogin/settings/Settings')
+        },
+        {
+          path: 'connection-inbox',
+          component: load('postlogin/connectionInbox/ConnectionInbox')
         }
       ]
     },
