@@ -74,6 +74,7 @@ import 'quasar-extras/fontawesome'
 // import 'quasar-extras/animate'
 
 Vue.http.options.root = 'http://localhost:7777/api/v1/'
+// Vue.http.options.root = 'http://192.168.0.4:7777/api/v1/'
 Quasar.start(() => {
   /* eslint-disable no-new */
   new Vue({
