@@ -221,6 +221,7 @@ export default {
       ConnectionService.createConnectionRequest(connectionObj)
         .then((response) => {
           this.modalLoading = false
+          this.$store.commit('updateUser', response.body)
           this.createToast('positive', 'Your connection request has been sent successfully')
           this.$refs.mapModal.close()
         })
@@ -261,20 +262,26 @@ export default {
         vm.currentPosition.lat = vm.mapOptions.lat
         BeaconService.getNearbyBeacons(vm.mapOptions).then(response => {
           let bounds = new google.maps.LatLngBounds()
-          response.body.map(marker => {
-            let position = {
-              lng: marker.location.coordinates[0],
-              lat: marker.location.coordinates[1]
-            }
-            marker.icon = new google.maps.MarkerImage('http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''), new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34))
-            marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.5 : 1
-            marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 1
-            marker.title = (marker.author._id === vm.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
-            bounds.extend(position)
-            marker.position = position
-          })
+          if (response.body.length) {
+            response.body.map(marker => {
+              let position = {
+                lng: marker.location.coordinates[0],
+                lat: marker.location.coordinates[1]
+              }
+              marker.icon = new google.maps.MarkerImage('http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''), new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34))
+              marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.5 : 1
+              marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 1
+              marker.title = (marker.author._id === vm.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
+              bounds.extend(position)
+              marker.position = position
+            })
+            vm.markers = response.body
+          }
+          else {
+            bounds.extend(vm.currentPosition)
+          }
+
           vm.$refs.beaconMap.fitBounds(bounds)
-          vm.markers = response.body
           vm.loading = false
         }).catch(error => {
           vm.loading = false

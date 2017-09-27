@@ -1,7 +1,7 @@
 <template>
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
-      <q-card class="beacon-card" color="white" v-if="!doesObjectExist($store.state.user.connectionRequests.outgoing)">
+      <q-card class="beacon-card" color="white" v-if="$store.state.user && !doesObjectExist($store.state.user.connectionRequests.outgoing)">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           {{ formData.beaconLit ? 'Extinguish' : 'Light' }} Beacon
         </q-card-title>
@@ -64,7 +64,7 @@
           </q-inner-loading>
         </form>
       </q-card>
-      <q-card class="beacon-card" v-if="doesObjectExist($store.state.user.connectionRequests.outgoing) && !doesObjectExist($store.state.user.beacon)">
+      <q-card class="beacon-card" v-if="$store.state.user && doesObjectExist($store.state.user.connectionRequests.outgoing) && !doesObjectExist($store.state.user.beacon)">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           Awaiting Connection Approval
         </q-card-title>
@@ -193,7 +193,7 @@ export default {
         name: '',
         description: '',
         color: this.$store.state.user.settings.defaultColor || '#FF0000',
-        beaconLit: (this.$store.state.user.beacon !== null),
+        beaconLit: this.doesObjectExist(this.$store.state.user.beacon),
         location: {
           type: 'Point',
           coordinates: []
