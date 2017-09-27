@@ -18,7 +18,7 @@
       </q-side-link>
       <q-side-link item to="connection-inbox">
         <q-item-side icon="mail" />
-        <q-item-main label="Inbox <strong>(3)</strong>" />
+        <q-item-main :label="'Inbox' + countIncomingRequests()" />
       </q-side-link>
       <q-item @click="logout()">
         <q-item-side icon="exit to app" />
@@ -36,9 +36,11 @@ import {
   QItemMain,
   QSideLink
 } from 'quasar'
+import Helper from 'mixins/Helper.js'
 
 export default {
   name: 'Sidebar',
+  mixins: [Helper],
   components: {
     QList,
     QItem,
@@ -50,10 +52,18 @@ export default {
     return {}
   },
   methods: {
-    toggleRight: function () {
+    toggleRight () {
       this.$emit('toggleRight')
     },
-    logout: function () {
+    countIncomingRequests () {
+      if (this.doesObjectExist(this.$store.state.user.connectionRequests) && this.$store.state.user.connectionRequests.incoming.length) {
+        return ` <strong>(${this.$store.state.user.connectionRequests.incoming.length})</strong>`
+      }
+      else {
+        return ''
+      }
+    },
+    logout () {
       localStorage.removeItem('token')
       this.$store.commit('updateUser', null)
       this.$router.push('/')

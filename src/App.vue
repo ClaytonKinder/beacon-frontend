@@ -13,8 +13,13 @@ export default {}
 <style lang="stylus">
   @import '~variables'
   html
-    max-width: 100vw
-    overflow-x: hidden
+    max-width 100vw
+    width 100%
+    overflow hidden
+  body
+    height 100%
+    position fixed
+    overflow-y scroll
   .color-white
     color white
   .modal-inner-loading

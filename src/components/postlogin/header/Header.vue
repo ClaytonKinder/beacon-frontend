@@ -34,8 +34,7 @@ import {
   QItem,
   QItemSide,
   QItemMain,
-  QSideLink,
-  QTransition
+  QSideLink
 } from 'quasar'
 import Helper from 'mixins/Helper.js'
 
@@ -53,8 +52,7 @@ export default {
     QItem,
     QItemSide,
     QItemMain,
-    QSideLink,
-    QTransition
+    QSideLink
   },
   data () {
     return {
@@ -90,5 +88,10 @@ export default {
 </script>
 
 <style lang="stylus">
-
+  .q-btn.mail-button
+    padding 0 0.5rem
+    .q-icon.has-mail
+      margin-right 2px
+    span
+      margin-left 2px
 </style>

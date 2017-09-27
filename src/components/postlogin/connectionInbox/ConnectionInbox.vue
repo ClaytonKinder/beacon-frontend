@@ -8,10 +8,12 @@
         <q-search class="no-margin" color="primary" inverted v-model="search" />
         <q-list separator>
           <q-item v-if="checkVisibility('has-incoming-requests')" v-for="request in getSlice(filteredRequests)" key="request.fullName">
-            <q-item-side class="text-center" left :avatar="request.gravatar">
-              <q-item-tile stamp>{{ request.created | moment('from', 'now') }}</q-item-tile>
+            <q-item-side class="text-center" left>
+              <img :src="request.gravatar" class="circular profile" />
             </q-item-side>
-            <q-item-main class="text-center" :label="request.name" />
+            <q-item-main class="text-center" :label="request.name">
+              <q-item-tile sublabel>{{ request.created | moment('from', 'now') }}</q-item-tile>
+            </q-item-main>
             <q-item-side right>
               <q-btn flat class="text-center icon-button" color="positive" icon="ion-checkmark-round"></q-btn>
               <q-btn flat class="no-shadow text-center icon-button" color="negative" icon="ion-close-round"></q-btn>
