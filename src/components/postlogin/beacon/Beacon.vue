@@ -1,7 +1,7 @@
 <template>
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
-      <q-card class="beacon-card" color="white" v-if="$store.state.user && !doesObjectExist($store.state.user.connectionRequests.outgoing)">
+      <q-card class="beacon-card" color="white" v-if="checkExistence(user, ['connectionRequests', 'outgoing'], true)">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           {{ formData.beaconLit ? 'Extinguish' : 'Light' }} Beacon
         </q-card-title>
@@ -64,7 +64,7 @@
           </q-inner-loading>
         </form>
       </q-card>
-      <q-card class="beacon-card" v-if="$store.state.user && doesObjectExist($store.state.user.connectionRequests.outgoing) && !doesObjectExist($store.state.user.beacon)">
+      <q-card class="beacon-card" v-if="checkExistence(user, ['connectionRequests', 'outgoing']) &&  checkExistence(user, ['beacon'], true)">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           Awaiting Connection Approval
         </q-card-title>
@@ -213,6 +213,11 @@ export default {
       loading: false
     }
   },
+  computed: {
+    user () {
+      return (this.$store.state.user) ? this.$store.state.user : false
+    }
+  },
   validations: {
     formData: {
       name: {
@@ -246,7 +251,8 @@ export default {
         BeaconService.lightBeacon(this.formData)
           .then(response => {
             this.loading = false
-            this.$store.commit('lightBeacon', response.body)
+            this.$store.commit('updateUser', response.body)
+            this.$store.commit('lightBeacon', response.body.beacon)
           })
           .catch(err => {
             this.loading = false
@@ -254,10 +260,15 @@ export default {
           })
       }
       else {
-        BeaconService.extinguishBeacon(this.formData.author)
+        let extinguishObj = {
+          beaconId: this.$store.state.user.beacon._id,
+          userId: this.$store.state.user._id
+        }
+        BeaconService.extinguishBeacon(extinguishObj)
           .then(response => {
             this.loading = false
             this.$store.commit('extinguishBeacon')
+            this.$store.commit('updateUser', response.body)
           })
           .catch(err => {
             this.loading = false
@@ -299,6 +310,7 @@ export default {
     }).catch(function (error) {
       vm.createToast('negative', error.body.message)
     })
+    console.log(this.$store.state.user)
   }
 }
 </script>

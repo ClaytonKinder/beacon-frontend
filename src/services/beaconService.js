@@ -4,8 +4,8 @@ export default {
   lightBeacon (data) {
     return Vue.http.post('beacon/lightbeacon', data)
   },
-  extinguishBeacon (userId) {
-    return Vue.http.post(`beacon/extinguishbeacon/${userId}`)
+  extinguishBeacon (data) {
+    return Vue.http.post('beacon/extinguishbeacon', data)
   },
   getNearbyBeacons (data) {
     return Vue.http.post('beacon/getnearbybeacons', data)

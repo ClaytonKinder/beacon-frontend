@@ -56,7 +56,7 @@ export default {
       this.$emit('toggleRight')
     },
     countIncomingRequests () {
-      if (this.doesObjectExist(this.$store.state.user.connectionRequests) && this.$store.state.user.connectionRequests.incoming.length) {
+      if (this.doesObjectExist(this.$store.state.user) && this.doesObjectExist(this.$store.state.user.connectionRequests) && this.$store.state.user.connectionRequests.incoming.length) {
         return ` <strong>(${this.$store.state.user.connectionRequests.incoming.length})</strong>`
       }
       else {

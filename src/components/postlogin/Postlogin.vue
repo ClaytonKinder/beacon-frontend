@@ -8,7 +8,7 @@
     <sidebar slot="right"></sidebar>
     <router-view></router-view>
     <audio id="horn">
-      <source src="assets/audio/horn.mp3" type="audio/mpeg">
+      <source src="/assets/audio/horn.mp3" type="audio/mpeg">
     </audio>
   </q-layout>
 </template>

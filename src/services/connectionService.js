@@ -1,9 +1,6 @@
 import Vue from 'vue'
 
 export default {
-  severConnectionsToBeacon (data) {
-    return Vue.http.post('connection/severconnectionstobeacon', data)
-  },
   createConnectionRequest (data) {
     return Vue.http.post('connection/createconnectionrequest', data)
   },

@@ -62,12 +62,6 @@
           <div class="q-toolbar-title text-right">
             <q-btn flat color="primary" @click="$refs.mapModal.close()">Close</q-btn>
             <q-btn
-              color="primary"
-              @click="severConnectionsToBeacon(selectedBeacon)"
-            >
-            Sever
-            </q-btn>
-            <q-btn
               v-if="!selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect"
               color="primary"
               @click="createConnectionRequest(selectedBeacon)"
@@ -172,20 +166,6 @@ export default {
     }
   },
   methods: {
-    severConnectionsToBeacon (beacon) {
-      let obj = {
-        beaconId: beacon._id,
-        beaconOwnerId: beacon.author._id,
-        userId: beacon.author._id
-      }
-      ConnectionService.severConnectionsToBeacon(obj)
-        .then((response) => {
-          console.log(response)
-        })
-        .catch((error) => {
-          console.error(error)
-        })
-    },
     checkConnectionErrors (beacon, distance) {
       this.connectionErrors = []
       if (!distance.canConnect) {

@@ -1,13 +1,13 @@
 <template>
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
-      <q-card class="relative-position" v-if="checkVisibility('user-beacon')">
+      <q-card class="relative-position" v-if="checkExistence(user, ['beacon'])">
         <q-card-title color="white" class="uppercase color-white text-center block bg-primary">
           Inbox
         </q-card-title>
         <q-search class="no-margin" color="primary" inverted v-model="search" />
         <q-list separator>
-          <q-item v-if="checkVisibility('has-incoming-requests')" v-for="request in getSlice(filteredRequests)" key="request.fullName">
+          <q-item v-if="checkExistence(user, ['connectionRequests', 'incoming'])" v-for="request in getSlice(filteredRequests)" key="request.fullName">
             <q-item-side class="text-center" left>
               <img :src="request.gravatar" class="circular profile" />
             </q-item-side>
@@ -19,7 +19,7 @@
               <q-btn flat class="no-shadow text-center icon-button" color="negative" icon="ion-close-round"></q-btn>
             </q-item-side>
           </q-item>
-          <q-item v-if="checkVisibility('no-incoming-requests')" class="text-center">
+          <q-item v-if="checkExistence(user, ['connectionRequests', 'incoming'], true)" class="text-center">
             <div class="full-width text-center">
               You have no connection requests at this time
             </div>
@@ -33,7 +33,7 @@
           <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
         </q-inner-loading>
       </q-card>
-      <q-card class="beacon-card no-beacon" v-if="checkVisibility('no-beacon')">
+      <q-card class="beacon-card no-beacon" v-if="checkExistence(user, ['beacon'], true)">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           <i class="icon ion-flame"></i>
           <h6>Light your beacon to view connection requests</h6>
@@ -107,6 +107,9 @@ export default {
     },
     maxPages () {
       return Math.ceil(this.filteredRequests.length / this.limit)
+    },
+    user () {
+      return (this.$store.state.user) ? this.$store.state.user : false
     }
   },
   methods: {
@@ -117,27 +120,7 @@ export default {
       else {
         return arr.slice(this.skip, this.skip + this.limit)
       }
-    },
-    checkVisibility (key) {
-      if (key === 'user-beacon') {
-        return (this.$store.state.user && this.$store.state.user.beacon)
-      }
-      else if (key === 'has-incoming-requests') {
-        return (
-          this.doesObjectExist(this.$store.state.user.connectionRequests) && this.$store.state.user.connectionRequests.incoming
-        )
-      }
-      else if (key === 'no-incoming-requests') {
-        return this.doesObjectExist(!this.$store.state.user.connectionRequests) ||
-          !this.$store.state.user.connectionRequests.incoming.length
-      }
-      else if (key === 'no-beacon') {
-        return (this.$store.state.user && !this.$store.state.user.beacon)
-      }
     }
-  },
-  mounted () {
-
   }
 }
 </script>
