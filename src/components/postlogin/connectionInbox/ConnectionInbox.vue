@@ -5,9 +5,9 @@
         <q-card-title color="white" class="uppercase color-white text-center block bg-primary">
           Inbox
         </q-card-title>
-        <q-search class="no-margin" color="primary" inverted v-model="search" />
+        <q-search v-if="checkExistence(user, ['beacon', 'incomingConnectionRequests'])" class="no-margin" color="primary" inverted v-model="search" />
         <q-list separator>
-          <q-item v-if="checkExistence(user, ['connectionRequests', 'incoming'])" v-for="request in getSlice(filteredRequests)" key="request.fullName">
+          <q-item v-if="checkExistence(user, ['beacon', 'incomingConnectionRequests'])" v-for="request in getSlice(filteredRequests)" key="request.fullName">
             <q-item-side class="text-center" left>
               <img :src="request.gravatar" class="circular profile" />
             </q-item-side>
@@ -15,17 +15,17 @@
               <q-item-tile sublabel>{{ request.created | moment('from', 'now') }}</q-item-tile>
             </q-item-main>
             <q-item-side right>
-              <q-btn flat class="text-center icon-button" color="positive" icon="ion-checkmark-round"></q-btn>
-              <q-btn flat class="no-shadow text-center icon-button" color="negative" icon="ion-close-round"></q-btn>
+              <q-btn flat class="text-center icon-button" color="positive" icon="ion-checkmark-round" @click.prevent="approveConnectionRequest(request)"></q-btn>
+              <q-btn flat class="no-shadow text-center icon-button" color="negative" icon="ion-close-round" @click.prevent="denyConnectionRequest(request)"></q-btn>
             </q-item-side>
           </q-item>
-          <q-item v-if="checkExistence(user, ['connectionRequests', 'incoming'], true)" class="text-center">
+          <q-item v-if="checkExistence(user, ['beacon', 'incomingConnectionRequests'], true)" class="text-center">
             <div class="full-width text-center">
               You have no connection requests at this time
             </div>
           </q-item>
         </q-list>
-        <div class="text-center">
+        <div class="text-center" v-if="checkExistence(user, ['beacon', 'incomingConnectionRequests'])">
           <q-pagination v-model="page" :min="minPages" :max="maxPages" />
         </div>
 
@@ -65,10 +65,12 @@ import {
   QPagination
 } from 'quasar'
 import Helper from 'mixins/Helper.js'
+import ConnectionService from 'services/connectionService.js'
+import Toast from 'mixins/Toast.js'
 
 export default {
   name: 'CommunicationInbox',
-  mixins: [Helper],
+  mixins: [Helper, Toast],
   components: {
     QBtn,
     QList,
@@ -90,13 +92,20 @@ export default {
     return {
       loading: false,
       search: '',
-      connectionRequests: this.$store.state.user.connectionRequests.incoming,
       page: 1,
       limit: 10,
       minPages: 1
     }
   },
   computed: {
+    connectionRequests () {
+      if (this.checkExistence(this.$store.state.user, ['beacon', 'incomingConnectionRequests'])) {
+        return this.$store.state.user.beacon.incomingConnectionRequests
+      }
+      else {
+        return []
+      }
+    },
     filteredRequests () {
       return this.connectionRequests.filter(request => {
         return request.name.toLowerCase().includes(this.search.toLowerCase())
@@ -120,6 +129,30 @@ export default {
       else {
         return arr.slice(this.skip, this.skip + this.limit)
       }
+    },
+    denyConnectionRequest (request) {
+      this.loading = true
+      ConnectionService.denyConnectionRequest(request)
+        .then((response) => {
+          this.loading = false
+          this.$store.commit('updateBeacon', response.body)
+        })
+        .catch((error) => {
+          this.loading = false
+          this.createToast('negative', error.body.message)
+        })
+    },
+    approveConnectionRequest (request) {
+      this.loading = true
+      ConnectionService.approveConnectionRequest(request)
+        .then((response) => {
+          this.loading = false
+          this.$store.commit('updateBeacon', response.body)
+        })
+        .catch((error) => {
+          this.loading = false
+          this.createToast('negative', error.body.message)
+        })
     }
   }
 }

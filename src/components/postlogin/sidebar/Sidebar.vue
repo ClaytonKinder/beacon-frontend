@@ -56,8 +56,8 @@ export default {
       this.$emit('toggleRight')
     },
     countIncomingRequests () {
-      if (this.doesObjectExist(this.$store.state.user) && this.doesObjectExist(this.$store.state.user.connectionRequests) && this.$store.state.user.connectionRequests.incoming.length) {
-        return ` <strong>(${this.$store.state.user.connectionRequests.incoming.length})</strong>`
+      if (this.checkExistence(this.$store.state.user, ['beacon', 'incomingConnectionRequests'])) {
+        return ` <strong>(${this.$store.state.user.beacon.incomingConnectionRequests.length})</strong>`
       }
       else {
         return ''

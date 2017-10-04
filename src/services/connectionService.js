@@ -7,6 +7,18 @@ export default {
   cancelConnectionRequest (data) {
     return Vue.http.post('connection/cancelconnectionrequest', data)
   },
+  approveConnectionRequest (data) {
+    return Vue.http.post('connection/approveconnectionrequest', data)
+  },
+  denyConnectionRequest (data) {
+    return Vue.http.post('connection/denyconnectionrequest', data)
+  },
+  removeConnection (data) {
+    return Vue.http.post('connection/removeconnection', data)
+  },
+  disconnectFromBeacon (data) {
+    return Vue.http.post('connection/disconnectfrombeacon', data)
+  },
   createConnectionObject (beacon, user, userPosition) {
     return {
       userId: user._id,

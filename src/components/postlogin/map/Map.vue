@@ -47,7 +47,7 @@
             <p class="text-center">{{selectedBeacon.description}}</p>
           </div>
           <div class="beacon-tags">
-            <q-chip class="beacon-tag on-left" :color="getBeaconThemeColor(selectedBeacon)" square small v-for="tag in selectedBeacon.additionalSettings.tags" :key="tag">
+            <q-chip class="beacon-tag on-left" :color="getBeaconThemeColor(selectedBeacon)" small v-for="tag in selectedBeacon.additionalSettings.tags" :key="tag">
               {{tag}}
             </q-chip>
           </div>

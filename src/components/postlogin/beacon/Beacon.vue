@@ -1,7 +1,8 @@
 <template>
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
-      <q-card class="beacon-card" color="white" v-if="checkExistence(user, ['connectionRequests', 'outgoing'], true)">
+      <!-- Light/Extinguish beacon card -->
+      <q-card class="beacon-card" color="white" v-if="checkExistence(user, ['outgoingConnectionRequest'], true) && checkExistence(user, ['connectedTo'], true)">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           {{ formData.beaconLit ? 'Extinguish' : 'Light' }} Beacon
         </q-card-title>
@@ -64,7 +65,8 @@
           </q-inner-loading>
         </form>
       </q-card>
-      <q-card class="beacon-card" v-if="checkExistence(user, ['connectionRequests', 'outgoing']) &&  checkExistence(user, ['beacon'], true)">
+      <!-- Awaiting connection approval card -->
+      <q-card class="beacon-card" v-if="checkExistence(user, ['outgoingConnectionRequest']) &&  checkExistence(user, ['beacon'], true)">
         <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
           Awaiting Connection Approval
         </q-card-title>
@@ -73,10 +75,41 @@
             <q-spinner color="primary" :size="50" />
           </div>
           <div class="connection-text">
-            You are currently waiting to be approved by {{ $store.state.user.connectionRequests.outgoing.ownerName }}
+            You are currently waiting to be approved by {{ $store.state.user.outgoingConnectionRequest.ownerName }}
           </div>
-          <q-btn color="primary" @click.prevent="cancelConnectionRequest($store.state.user.connectionRequests.outgoing)">Cancel connection request</q-btn>
+          <q-btn color="primary" @click.prevent="cancelConnectionRequest($store.state.user.outgoingConnectionRequest)">Cancel connection request</q-btn>
         </div>
+      </q-card>
+      <!-- Connected to card -->
+      <q-card class="beacon-card" v-if="checkExistence(user, ['outgoingConnectionRequest'], true) && checkExistence(user, ['connectedTo']) && checkExistence(user, ['beacon'], true)">
+        <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
+          Connected!
+        </q-card-title>
+        <div class="connection-body text-center">
+          <div class="connection-text">
+            You are connected to the beacon of {{$store.state.user.connectedTo.ownerName}}
+          </div>
+          <q-btn color="primary" @click.prevent="disconnectFromBeacon($store.state.user.connectedTo)">Disconnect</q-btn>
+        </div>
+      </q-card>
+      <!-- Connections card -->
+      <q-card class="beacon-card connection-card relative-position" color="white" v-if="checkExistence(user, ['beacon'])">
+        <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
+          Connections
+        </q-card-title>
+        <q-search v-if="checkExistence(user, ['beacon', 'connections'])" class="no-margin" color="primary" inverted v-model="search" />
+        <div class="row" v-if="checkExistence(user, ['beacon', 'connections'])">
+          <connection-square class="col col-lg-4 col-sm-6 col-xs-12" v-for="connection in getSlice(filteredConnections)" key="connection.userId" :connection="connection" @click.native="openRemoveConnectionDialog(connection)"></connection-square>
+        </div>
+        <div class="text-center" v-if="checkExistence(user, ['beacon', 'connections'])">
+          <q-pagination v-model="page" :min="minPages" :max="maxPages" />
+        </div>
+        <div class="text-center no-connections" v-if="checkExistence(user, ['beacon', 'connections'], true)">
+          You have no connections at this time
+        </div>
+        <q-inner-loading :visible="loading">
+          <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+        </q-inner-loading>
       </q-card>
       <q-modal class="footer-no-shadow additional-settings-modal mobile-modal-padding" ref="additionalSettingsModal" :content-css="{minWidth: '400px', minHeight: '500px'}">
         <q-modal-layout class="additionalSettingsModal">
@@ -158,7 +191,10 @@ import {
   QChipsInput,
   QInnerLoading,
   QSpinnerGears,
-  QSpinner
+  QSpinner,
+  QSearch,
+  QPagination,
+  Dialog
 } from 'quasar'
 import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 import LocationService from 'services/locationService.js'
@@ -166,6 +202,7 @@ import ConnectionService from 'services/connectionService.js'
 import BeaconService from 'services/beaconService.js'
 import Toast from 'mixins/Toast.js'
 import Helper from 'mixins/Helper.js'
+import ConnectionSquare from 'components/snippets/connectionSquare/ConnectionSquare'
 
 export default {
   name: 'Beacon',
@@ -185,7 +222,10 @@ export default {
     QChipsInput,
     QInnerLoading,
     QSpinnerGears,
-    QSpinner
+    QSpinner,
+    QSearch,
+    QPagination,
+    ConnectionSquare
   },
   data () {
     return {
@@ -210,12 +250,35 @@ export default {
         genderRestriction: null,
         tags: []
       },
+      search: '',
+      page: 1,
+      limit: 10,
+      minPages: 1,
       loading: false
     }
   },
   computed: {
     user () {
       return (this.$store.state.user) ? this.$store.state.user : false
+    },
+    connections () {
+      if (this.checkExistence(this.$store.state.user, ['beacon', 'connections'])) {
+        return this.$store.state.user.beacon.connections
+      }
+      else {
+        return []
+      }
+    },
+    filteredConnections () {
+      return this.connections.filter(connection => {
+        return connection.name.toLowerCase().includes(this.search.toLowerCase())
+      })
+    },
+    skip () {
+      return (this.page * this.limit) - this.limit
+    },
+    maxPages () {
+      return Math.ceil(this.filteredConnections.length / this.limit)
     }
   },
   validations: {
@@ -242,6 +305,52 @@ export default {
     }
   },
   methods: {
+    getSlice (arr) {
+      if (this.page === 1) {
+        return arr.slice(0, 10)
+      }
+      else {
+        return arr.slice(this.skip, this.skip + this.limit)
+      }
+    },
+    openRemoveConnectionDialog (connection) {
+      Dialog.create({
+        title: `Disconnect ${connection.name} from your beacon?`,
+        buttons: [
+          'Cancel',
+          {
+            label: 'Confirm',
+            handler: () => {
+              this.loading = true
+              ConnectionService.removeConnection(connection)
+                .then((response) => {
+                  this.loading = false
+                  this.$store.commit('updateBeacon', response.body.beacon)
+                })
+                .catch((error) => {
+                  this.loading = false
+                  this.createToast('negative', error.body.message)
+                })
+            }
+          }
+        ]
+      })
+    },
+    disconnectFromBeacon (beacon) {
+      this.loading = true
+      console.log(beacon)
+      ConnectionService.disconnectFromBeacon(beacon)
+        .then((response) => {
+          this.loading = false
+          this.$store.commit('updateUser', response.body)
+          console.log(response)
+        })
+        .catch((error) => {
+          this.loading = false
+          console.log(error)
+          this.createToast('negative', error.body.message)
+        })
+    },
     toggleBeacon (e) {
       this.loading = true
       if (this.formData.beaconLit) {
@@ -252,11 +361,11 @@ export default {
           .then(response => {
             this.loading = false
             this.$store.commit('updateUser', response.body)
-            this.$store.commit('lightBeacon', response.body.beacon)
+            this.$store.commit('updateBeacon', response.body.beacon)
           })
-          .catch(err => {
+          .catch(error => {
             this.loading = false
-            this.createToast('negative', err.body.message)
+            this.createToast('negative', error.body.message)
           })
       }
       else {
@@ -270,9 +379,9 @@ export default {
             this.$store.commit('extinguishBeacon')
             this.$store.commit('updateUser', response.body)
           })
-          .catch(err => {
+          .catch(error => {
             this.loading = false
-            this.createToast('negative', err.body.message)
+            this.createToast('negative', error.body.message)
           })
       }
     },
@@ -325,6 +434,11 @@ export default {
       padding 1rem
     .connection-text
       padding 1rem 0
+    &.connection-card
+      margin-top 3rem
+      .no-connections
+        color: #0C0C0C
+        padding 1rem
   .toggle-field
     padding-top 2rem
     padding-bottom 1rem

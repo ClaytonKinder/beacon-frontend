@@ -6,6 +6,7 @@
         <div slot="subtitle" v-if="checkBeaconStatus('active')">Active</div>
         <div slot="subtitle" v-if="checkBeaconStatus('inactive')">Inactive</div>
         <div slot="subtitle" v-if="checkBeaconStatus('awaitingConnectionApproval')">Awaiting connection approval</div>
+        <div slot="subtitle" v-if="checkBeaconStatus('connected')">Connected</div>
       </q-toolbar-title>
       <q-btn
         flat
@@ -77,10 +78,13 @@ export default {
         return (this.$store.state.user && this.$store.state.user.beacon)
       }
       else if (key === 'inactive') {
-        return (this.$store.state.user && !this.$store.state.user.beacon && !this.doesObjectExist(this.$store.state.user.connectionRequests.outgoing))
+        return (this.$store.state.user && !this.$store.state.user.beacon && !this.doesObjectExist(this.$store.state.user.outgoingConnectionRequest) && !this.doesObjectExist(this.$store.state.user.connectedTo))
       }
       else if (key === 'awaitingConnectionApproval') {
-        return (this.$store.state.user && !this.$store.state.user.beacon && this.doesObjectExist(this.$store.state.user.connectionRequests.outgoing))
+        return (this.$store.state.user && !this.$store.state.user.beacon && this.doesObjectExist(this.$store.state.user.outgoingConnectionRequest))
+      }
+      else if (key === 'connected') {
+        return (this.$store.state.user && !this.$store.state.user.beacon && this.doesObjectExist(this.$store.state.user.connectedTo))
       }
     }
   }

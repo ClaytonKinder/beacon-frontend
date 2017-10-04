@@ -19,7 +19,7 @@ const store = new Vuex.Store({
     deleteUser: (state) => {
       state.user = null
     },
-    lightBeacon: (state, beacon) => {
+    updateBeacon: (state, beacon) => {
       state.user.beacon = beacon
     },
     extinguishBeacon: (state) => {
