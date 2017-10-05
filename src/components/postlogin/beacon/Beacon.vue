@@ -239,6 +239,7 @@ export default {
           coordinates: []
         },
         author: this.$store.state.user._id,
+        userId: this.$store.state.user._id,
         additionalSettings: null
       },
       additionalSettings: {
@@ -252,7 +253,7 @@ export default {
       },
       search: '',
       page: 1,
-      limit: 10,
+      limit: 12,
       minPages: 1,
       loading: false
     }
@@ -326,6 +327,13 @@ export default {
                 .then((response) => {
                   this.loading = false
                   this.$store.commit('updateBeacon', response.body.beacon)
+                  let socketObj = {
+                    toId: connection.userId,
+                    toName: connection.name,
+                    fromId: connection.beaconOwnerId,
+                    fromName: connection.ownerName
+                  }
+                  this.$socket.emit('removeConnection', socketObj)
                 })
                 .catch((error) => {
                   this.loading = false
@@ -338,20 +346,23 @@ export default {
     },
     disconnectFromBeacon (beacon) {
       this.loading = true
-      console.log(beacon)
       ConnectionService.disconnectFromBeacon(beacon)
         .then((response) => {
           this.loading = false
           this.$store.commit('updateUser', response.body)
-          console.log(response)
+          let socketObj = {
+            toId: beacon.beaconOwnerId,
+            fromId: beacon.userId,
+            fromName: beacon.name
+          }
+          this.$socket.emit('disconnectFromBeacon', socketObj)
         })
         .catch((error) => {
           this.loading = false
-          console.log(error)
           this.createToast('negative', error.body.message)
         })
     },
-    toggleBeacon (e) {
+    toggleBeacon () {
       this.loading = true
       if (this.formData.beaconLit) {
         if (this.$store.state.user.settings.playSound || false) {
@@ -369,15 +380,24 @@ export default {
           })
       }
       else {
+        let beacon = JSON.parse(JSON.stringify(this.$store.state.user.beacon))
         let extinguishObj = {
-          beaconId: this.$store.state.user.beacon._id,
-          userId: this.$store.state.user._id
+          beaconId: beacon._id,
+          userId: beacon.author
         }
         BeaconService.extinguishBeacon(extinguishObj)
           .then(response => {
             this.loading = false
             this.$store.commit('extinguishBeacon')
             this.$store.commit('updateUser', response.body)
+            let socketObj = {
+              toIds: beacon.connections.map((connection) => {
+                return connection.userId
+              }),
+              fromId: beacon.author,
+              fromName: this.$store.state.user.fullName
+            }
+            this.$socket.emit('extinguishBeacon', socketObj)
           })
           .catch(error => {
             this.loading = false
@@ -401,6 +421,12 @@ export default {
       ConnectionService.cancelConnectionRequest(data)
         .then((response) => {
           this.$store.commit('updateUser', response.body)
+          let socketObj = {
+            toId: data.beaconOwnerId,
+            fromId: data.userId,
+            fromName: data.name
+          }
+          this.$socket.emit('cancelConnectionRequest', socketObj)
         })
         .catch((error) => {
           this.createToast('negative', error.body.message)
@@ -408,18 +434,16 @@ export default {
     }
   },
   mounted () {
-    const vm = this
     if (this.doesObjectExist(this.$store.state.user.beacon)) {
       this.formData = this.$store.state.user.beacon
       this.formData.beaconLit = true
     }
-    LocationService.getCurrentPosition().then(function (response) {
-      vm.formData.location.coordinates[0] = response.body.location.lng
-      vm.formData.location.coordinates[1] = response.body.location.lat
+    LocationService.getCurrentPosition().then((response) => {
+      this.formData.location.coordinates[0] = response.body.location.lng
+      this.formData.location.coordinates[1] = response.body.location.lat
     }).catch(function (error) {
-      vm.createToast('negative', error.body.message)
+      this.createToast('negative', error.body.message)
     })
-    console.log(this.$store.state.user)
   }
 }
 </script>

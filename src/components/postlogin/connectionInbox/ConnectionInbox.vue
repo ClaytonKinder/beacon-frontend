@@ -21,14 +21,13 @@
           </q-item>
           <q-item v-if="checkExistence(user, ['beacon', 'incomingConnectionRequests'], true)" class="text-center">
             <div class="full-width text-center">
-              You have no connection requests at this time
+              <q-spinner color="primary" :size="50" />
             </div>
           </q-item>
         </q-list>
         <div class="text-center" v-if="checkExistence(user, ['beacon', 'incomingConnectionRequests'])">
           <q-pagination v-model="page" :min="minPages" :max="maxPages" />
         </div>
-
         <q-inner-loading :visible="loading">
           <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
         </q-inner-loading>
@@ -39,9 +38,6 @@
           <h6>Light your beacon to view connection requests</h6>
         </q-card-title>
       </q-card>
-      <q-inner-loading :visible="loading">
-        <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
-      </q-inner-loading>
     </div>
   </div>
 </template>
@@ -62,7 +58,8 @@ import {
   QCardTitle,
   QField,
   QSearch,
-  QPagination
+  QPagination,
+  QSpinner
 } from 'quasar'
 import Helper from 'mixins/Helper.js'
 import ConnectionService from 'services/connectionService.js'
@@ -86,7 +83,8 @@ export default {
     QCardTitle,
     QField,
     QSearch,
-    QPagination
+    QPagination,
+    QSpinner
   },
   data () {
     return {
@@ -136,6 +134,13 @@ export default {
         .then((response) => {
           this.loading = false
           this.$store.commit('updateBeacon', response.body)
+          let socketObj = {
+            toId: request.userId,
+            toName: request.name,
+            fromId: request.beaconOwnerId,
+            fromName: request.ownerName
+          }
+          this.$socket.emit('denyConnectionRequest', socketObj)
         })
         .catch((error) => {
           this.loading = false
@@ -148,6 +153,13 @@ export default {
         .then((response) => {
           this.loading = false
           this.$store.commit('updateBeacon', response.body)
+          let socketObj = {
+            toId: request.userId,
+            toName: request.name,
+            fromId: request.beaconOwnerId,
+            fromName: request.ownerName
+          }
+          this.$socket.emit('approveConnectionRequest', socketObj)
         })
         .catch((error) => {
           this.loading = false

@@ -7,8 +7,8 @@ require(`./themes/app.${__THEME}.styl`)
 // ==============================
 
 // Uncomment the following lines if you need IE11/Edge support
-// require(`quasar/dist/quasar.ie`)
-// require(`quasar/dist/quasar.ie.${__THEME}.css`)
+require(`quasar/dist/quasar.ie`)
+require(`quasar/dist/quasar.ie.${__THEME}.css`)
 
 import Vue from 'vue'
 import Quasar from 'quasar'
@@ -17,7 +17,10 @@ import VueResource from 'vue-resource'
 import authService from './services/authService'
 import store from './store'
 import Vuelidate from 'vuelidate'
+import VueSocketio from 'vue-socket.io'
+import io from 'socket.io-client'
 import * as VueGoogleMaps from 'vue2-google-maps'
+Vue.use(VueSocketio, io(process.env.SERVER_URL), store)
 Vue.use(require('vue-moment'))
 Vue.use(Vuelidate)
 Vue.use(VueResource)
@@ -30,23 +33,27 @@ Vue.use(VueGoogleMaps, {
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    authService.isAuth().then(response => {
-      store.commit('updateUser', response.body)
-      next(response.body)
-    }).catch(() => {
-      localStorage.setItem('userId', '')
-      next({
-        path: '/'
+    authService.isAuth()
+      .then(response => {
+        store.commit('updateUser', response.body)
+        next(response.body)
       })
-    })
+      .catch(() => {
+        localStorage.setItem('userId', '')
+        next({
+          path: '/'
+        })
+      })
   }
   else if (to.matched.some(record => record.meta.onlyIfLoggedOut)) {
-    authService.isAuth().then(response => {
-      store.commit('updateUser', response.body)
-      next('/app/beacon')
-    }).catch(() => {
-      next()
-    })
+    authService.isAuth()
+      .then(response => {
+        store.commit('updateUser', response.body)
+        next('/app/beacon')
+      })
+      .catch(() => {
+        next()
+      })
   }
   else {
     next()

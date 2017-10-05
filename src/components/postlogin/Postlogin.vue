@@ -51,18 +51,25 @@ export default {
     Toast
   },
   data () {
-    return {}
+    return {
+      socketClientObj: {
+        fullName: this.$store.state.user.fullName,
+        email: this.$store.state.user.email,
+        userId: this.$store.state.user._id
+      }
+    }
   },
-  computed: {
-
-  },
+  computed: {},
   methods: {
     toggleRight: function () {
       this.$refs.layout.toggleRight()
     }
   },
   mounted () {
-
+    this.$socket.emit('userNavigatedToPostlogin', this.socketClientObj)
+  },
+  beforeDestroy () {
+    this.$socket.emit('userNavigatedToPrelogin', this.socketClientObj)
   }
 }
 </script>

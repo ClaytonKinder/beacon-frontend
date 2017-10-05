@@ -44,7 +44,7 @@
         <h6 class="text-center beacon-name">{{selectedBeacon.name}}</h6>
         <div class="modal-body">
           <div>
-            <p class="text-center">{{selectedBeacon.description}}</p>
+            <p>{{selectedBeacon.description}}</p>
           </div>
           <div class="beacon-tags">
             <q-chip class="beacon-tag on-left" :color="getBeaconThemeColor(selectedBeacon)" small v-for="tag in selectedBeacon.additionalSettings.tags" :key="tag">
@@ -62,19 +62,26 @@
           <div class="q-toolbar-title text-right">
             <q-btn flat color="primary" @click="$refs.mapModal.close()">Close</q-btn>
             <q-btn
-              v-if="!selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect"
+              v-if="!selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect && $store.state.user.outgoingConnectionRequest.beaconId !== selectedBeacon._id"
               color="primary"
               @click="createConnectionRequest(selectedBeacon)"
             >
             Connect
             </q-btn>
             <q-btn
-              v-if="selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect"
+              v-if="selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect && $store.state.user.outgoingConnectionRequest.beaconId !== selectedBeacon._id"
               color="secondary"
               icon="lock"
               @click="createConnectionRequest(selectedBeacon)"
             >
             Connect with Password
+            </q-btn>
+            <q-btn
+              v-if="$store.state.user.outgoingConnectionRequest.beaconId === selectedBeacon._id"
+              color="primary"
+              @click="cancelConnectionRequest($store.state.user.outgoingConnectionRequest)"
+            >
+            Cancel connection request
             </q-btn>
           </div>
         </q-toolbar>
@@ -110,6 +117,7 @@ import {
 } from 'quasar'
 import BeaconService from 'services/beaconService'
 import Toast from 'mixins/Toast.js'
+import Helper from 'mixins/Helper.js'
 import LocationService from 'services/locationService.js'
 import ConnectionService from 'services/connectionService.js'
 
@@ -120,7 +128,7 @@ function hexToRgb (hex) {
 
 export default {
   name: 'map',
-  mixins: [Toast],
+  mixins: [Toast, Helper],
   components: {
     QWindowResizeObservable,
     QModal,
@@ -196,13 +204,74 @@ export default {
         })
     },
     createConnectionRequest (beacon) {
+      console.log(beacon, this.$store.state.user)
       this.modalLoading = true
       let connectionObj = ConnectionService.createConnectionObject(beacon, this.$store.state.user, this.currentPosition)
-      ConnectionService.createConnectionRequest(connectionObj)
+      // If user already has a connection request on another beacon, cancel that first
+      if (this.doesObjectExist(this.$store.state.user.outgoingConnectionRequest) && this.$store.state.user.outgoingConnectionRequest.beaconId !== beacon.beaconId) {
+        let connectionRequest = JSON.parse(JSON.stringify(this.$store.state.user.outgoingConnectionRequest))
+        ConnectionService.cancelConnectionRequest(this.$store.state.user.outgoingConnectionRequest)
+          .then((response) => {
+            let socketObj = {
+              toId: connectionRequest.beaconOwnerId,
+              fromId: connectionRequest.userId,
+              fromName: connectionRequest.name
+            }
+            this.$socket.emit('cancelConnectionRequest', socketObj)
+            ConnectionService.createConnectionRequest(connectionObj)
+              .then((response) => {
+                this.modalLoading = false
+                this.$store.commit('updateUser', response.body)
+                this.createToast('positive', 'Your connection request has been sent successfully')
+                let socketObj = {
+                  toId: response.body.outgoingConnectionRequest.beaconOwnerId,
+                  fromId: response.body.outgoingConnectionRequest.userId,
+                  fromName: response.body.outgoingConnectionRequest.name
+                }
+                this.$socket.emit('createConnectionRequest', socketObj)
+                this.$refs.mapModal.close()
+              })
+              .catch((error) => {
+                this.modalLoading = false
+                this.createToast('negative', error.body.message)
+              })
+          })
+          .catch((error) => {
+            this.createToast('negative', error.body.message)
+          })
+      }
+      else {
+        ConnectionService.createConnectionRequest(connectionObj)
+          .then((response) => {
+            this.modalLoading = false
+            this.$store.commit('updateUser', response.body)
+            this.createToast('positive', 'Your connection request has been sent successfully')
+            let socketObj = {
+              toId: response.body.outgoingConnectionRequest.beaconOwnerId,
+              fromId: response.body.outgoingConnectionRequest.userId,
+              fromName: response.body.outgoingConnectionRequest.name
+            }
+            this.$socket.emit('createConnectionRequest', socketObj)
+            this.$refs.mapModal.close()
+          })
+          .catch((error) => {
+            this.modalLoading = false
+            this.createToast('negative', error.body.message)
+          })
+      }
+    },
+    cancelConnectionRequest (connectionRequest) {
+      this.modalLoading = true
+      ConnectionService.cancelConnectionRequest(connectionRequest)
         .then((response) => {
           this.modalLoading = false
           this.$store.commit('updateUser', response.body)
-          this.createToast('positive', 'Your connection request has been sent successfully')
+          let socketObj = {
+            toId: connectionRequest.beaconOwnerId,
+            fromId: connectionRequest.userId,
+            fromName: connectionRequest.name
+          }
+          this.$socket.emit('cancelConnectionRequest', socketObj)
           this.$refs.mapModal.close()
         })
         .catch((error) => {
