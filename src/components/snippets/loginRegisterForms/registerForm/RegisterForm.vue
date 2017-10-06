@@ -1,5 +1,5 @@
 <template>
-  <form class="relative-position" name="registerForm" @submit.prevent="emitRegister">
+  <form class="relative-position" name="registerForm" @submit.prevent="register">
     <q-field
       :error="$v.formData.firstName.$dirty && $v.formData.firstName.$invalid"
       error-label="Please enter your first name"
@@ -92,9 +92,12 @@ import {
   QDatetime
 } from 'quasar'
 import { required, email, minLength, maxLength, sameAs } from 'vuelidate/lib/validators'
+import AuthService from 'services/authService.js'
+import Toast from 'mixins/Toast.js'
 
 export default {
   name: 'RegisterForm',
+  mixins: [Toast],
   components: {
     QBtn,
     QField,
@@ -155,18 +158,17 @@ export default {
   },
   props: {},
   methods: {
-    emitRegister () {
+    register () {
       this.loading = true
-      this.$q.events.$emit('emitRegister', this.formData)
+      AuthService.register(this.formData).then(res => {
+        localStorage.setItem('token', res.body.token)
+        this.$router.push('/app/beacon')
+        this.loading = false
+      }).catch(err => {
+        this.createToast('negative', err.body.message)
+        this.loading = false
+      })
     }
-  },
-  mounted () {
-    const vm = this
-    this.$q.events.$on('loaded', function (loadedName) {
-      if (loadedName === 'registerForm') {
-        vm.loading = false
-      }
-    })
   }
 }
 </script>

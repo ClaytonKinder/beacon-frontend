@@ -1,5 +1,5 @@
 <template>
-  <form class="relative-position" name="loginForm" @submit.prevent="emitLogin">
+  <form class="relative-position" name="loginForm" @submit.prevent="login">
     <q-field
       :error="$v.formData.email.$dirty && $v.formData.email.$invalid"
       error-label="Please enter a valid email address"
@@ -36,9 +36,12 @@
 <script>
 import { QBtn, QField, QInput, QInnerLoading, QSpinnerGears } from 'quasar'
 import { required, email } from 'vuelidate/lib/validators'
+import AuthService from 'services/authService.js'
+import Toast from 'mixins/Toast.js'
 
 export default {
   name: 'LoginForm',
+  mixins: [Toast],
   components: {
     QBtn,
     QField,
@@ -68,18 +71,17 @@ export default {
   },
   props: {},
   methods: {
-    emitLogin () {
+    login () {
       this.loading = true
-      this.$q.events.$emit('emitLogin', this.formData)
+      AuthService.login(this.formData).then(res => {
+        localStorage.setItem('token', res.body.token)
+        this.$router.push('/app/beacon')
+        this.loading = false
+      }).catch(err => {
+        this.loading = false
+        this.createToast('negative', err.body.message)
+      })
     }
-  },
-  mounted () {
-    const vm = this
-    this.$q.events.$on('loaded', function (loadedName) {
-      if (loadedName === 'loginForm') {
-        vm.loading = false
-      }
-    })
   }
 }
 </script>

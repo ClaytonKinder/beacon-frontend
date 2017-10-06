@@ -11,7 +11,15 @@
             :labelWidth="11"
           >
           <q-toggle
-            v-model="formData.playSound"
+            v-model="formData.playBeaconSound"
+          />
+          </q-field>
+          <q-field
+            label="Play sound when receiving a connection request"
+            :labelWidth="11"
+          >
+          <q-toggle
+            v-model="formData.playNotificationSound"
           />
           </q-field>
           <q-field
@@ -96,7 +104,8 @@ export default {
       formData: this.$store.state.user.settings || {
         beaconLimit: 55,
         defaultColor: '#FF0000',
-        playSound: false,
+        playBeaconSound: false,
+        playNotificationSound: true,
         unitOfMeasurement: 'miles',
         searchRadius: 15
       },

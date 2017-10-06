@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import authService from 'services/authService'
 import Toast from 'mixins/Toast.js'
+import Helper from 'mixins/Helper.js'
 
 Vue.use(Vuex)
 const store = new Vuex.Store({
@@ -28,10 +29,16 @@ const store = new Vuex.Store({
     }
   },
   actions: {
-    refreshUser () {
+    refreshUser (store) {
+      let prevConnectionRequestCount = (Helper.methods.doesObjectExist(store.state.user.beacon)) ? store.state.user.beacon.incomingConnectionRequests.length : null
       authService.isAuth()
         .then(response => {
+          console.log(response.body)
           store.commit('updateUser', response.body)
+          let currentConnectionRequestCount = (Helper.methods.doesObjectExist(store.state.user.beacon)) ? store.state.user.beacon.incomingConnectionRequests.length : null
+          if (prevConnectionRequestCount < currentConnectionRequestCount && store.state.user.settings.playNotificationSound) {
+            document.getElementById('notification').play()
+          }
         })
         .catch(() => {
           localStorage.setItem('userId', '')

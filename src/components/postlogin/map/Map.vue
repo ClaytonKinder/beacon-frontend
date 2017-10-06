@@ -57,19 +57,31 @@
               <div color="negative">{{error}}</div>
             </div>
           </div>
+          <div>
+            <div v-if="chunkedConnections.length < 2">
+              <div class="row" v-for="(array, idx) in chunkedConnections" :key="idx">
+                <connection-square class="col col-xs-4" v-for="connection in chunkedConnections[idx]" key="connection.userId" :map-modal="true" :connection="connection"></connection-square>
+              </div>
+            </div>
+            <q-carousel dots v-if="chunkedConnections.length >=2" ref="connectionCarousel" class="connections-carousel">
+              <div slot="slide" class="row" v-for="(array, idx) in chunkedConnections" :key="idx">
+                <connection-square class="col col-xs-4" v-for="connection in chunkedConnections[idx]" key="connection.userId" :map-modal="true" :connection="connection"></connection-square>
+              </div>
+            </q-carousel>
+          </div>
         </div>
         <q-toolbar class="bg-white" slot="footer">
           <div class="q-toolbar-title text-right">
-            <q-btn flat color="primary" @click="$refs.mapModal.close()">Close</q-btn>
+            <q-btn flat color="primary" @click.prevent="$refs.mapModal.close()">Close</q-btn>
             <q-btn
-              v-if="!selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect && $store.state.user.outgoingConnectionRequest.beaconId !== selectedBeacon._id"
+              v-if="showButtons('connect')"
               color="primary"
               @click="createConnectionRequest(selectedBeacon)"
             >
             Connect
             </q-btn>
             <q-btn
-              v-if="selectedBeacon.additionalSettings.password && distanceInfo && distanceInfo.canConnect && $store.state.user.outgoingConnectionRequest.beaconId !== selectedBeacon._id"
+              v-if="showButtons('connect-password')"
               color="secondary"
               icon="lock"
               @click="createConnectionRequest(selectedBeacon)"
@@ -77,11 +89,25 @@
             Connect with Password
             </q-btn>
             <q-btn
-              v-if="$store.state.user.outgoingConnectionRequest.beaconId === selectedBeacon._id"
-              color="primary"
+              v-if="showButtons('cancel-request')"
+              color="negative"
               @click="cancelConnectionRequest($store.state.user.outgoingConnectionRequest)"
             >
             Cancel connection request
+            </q-btn>
+            <q-btn
+              v-if="showButtons('disconnect')"
+              color="negative"
+              @click="disconnectFromBeacon(selectedBeacon)"
+            >
+            Disconnect
+            </q-btn>
+            <q-btn
+              v-if="showButtons('extinguish')"
+              color="negative"
+              @click="extinguishBeacon(selectedBeacon)"
+            >
+            Extinguish
             </q-btn>
           </div>
         </q-toolbar>
@@ -113,13 +139,15 @@ import {
   QTabs,
   QTab,
   QInnerLoading,
-  QSpinnerGears
+  QSpinnerGears,
+  QCarousel
 } from 'quasar'
 import BeaconService from 'services/beaconService'
 import Toast from 'mixins/Toast.js'
 import Helper from 'mixins/Helper.js'
 import LocationService from 'services/locationService.js'
 import ConnectionService from 'services/connectionService.js'
+import ConnectionSquare from 'components/snippets/connectionSquare/ConnectionSquare'
 
 function hexToRgb (hex) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -141,7 +169,9 @@ export default {
     QTabs,
     QTab,
     QInnerLoading,
-    QSpinnerGears
+    QSpinnerGears,
+    QCarousel,
+    ConnectionSquare
   },
   data () {
     return {
@@ -173,7 +203,112 @@ export default {
       }
     }
   },
+  computed: {
+    chunkedConnections () {
+      if (this.selectedBeacon && this.selectedBeacon.connections.length) {
+        let connections = JSON.parse(JSON.stringify(this.selectedBeacon.connections))
+        let arrays = []
+        let size = 3
+        while (connections.length > 0) {
+          arrays.push(connections.splice(0, size))
+        }
+        return arrays
+      }
+      else {
+        return []
+      }
+    }
+  },
   methods: {
+    showButtons (key) {
+      if (key === 'connect') {
+        return (
+          !this.selectedBeacon.additionalSettings.password &&
+          this.distanceInfo &&
+          this.distanceInfo.canConnect &&
+          this.$store.state.user.outgoingConnectionRequest.beaconId !== this.selectedBeacon._id &&
+          this.$store.state.user.connectedTo.beaconId !== this.selectedBeacon._id &&
+          (!this.$store.state.user.beacon || this.selectedBeacon._id !== this.$store.state.user.beacon._id) &&
+          !this.$store.state.user.beacon
+        )
+      }
+      else if (key === 'connect-password') {
+        return (
+          this.selectedBeacon.additionalSettings.password &&
+          this.distanceInfo &&
+          this.distanceInfo.canConnect &&
+          this.$store.state.user.outgoingConnectionRequest.beaconId !== this.selectedBeacon._id &&
+          this.$store.state.user.connectedTo.beaconId !== this.selectedBeacon._id &&
+          (!this.$store.state.user.beacon || this.selectedBeacon._id !== this.$store.state.user.beacon._id)
+        )
+      }
+      else if (key === 'cancel-request') {
+        return (
+          this.$store.state.user.outgoingConnectionRequest.beaconId === this.selectedBeacon._id
+        )
+      }
+      else if (key === 'disconnect') {
+        return (
+          this.$store.state.user.connectedTo.beaconId === this.selectedBeacon._id
+        )
+      }
+      else if (key === 'extinguish') {
+        return (
+          this.$store.state.user.beacon &&
+          this.$store.state.user.beacon._id === this.selectedBeacon._id
+        )
+      }
+    },
+    disconnectFromBeacon (beacon) {
+      this.modalLoading = true
+      beacon.userId = this.$store.state.user._id
+      beacon.beaconId = beacon._id
+      ConnectionService.disconnectFromBeacon(beacon)
+        .then((response) => {
+          this.modalLoading = false
+          this.$store.commit('updateUser', response.body)
+          let socketObj = {
+            toId: beacon.author._id,
+            fromId: beacon.userId,
+            fromName: beacon.name
+          }
+          this.$socket.emit('disconnectFromBeacon', socketObj)
+          this.$refs.mapModal.close()
+        })
+        .catch((error) => {
+          this.modalLoading = false
+          this.createToast('negative', error.body.message)
+        })
+    },
+    extinguishBeacon () {
+      this.modalLoading = true
+      let beacon = JSON.parse(JSON.stringify(this.$store.state.user.beacon))
+      let extinguishObj = {
+        beaconId: beacon._id,
+        userId: beacon.author
+      }
+      BeaconService.extinguishBeacon(extinguishObj)
+        .then(response => {
+          this.modalLoading = false
+          this.$store.commit('extinguishBeacon')
+          this.$store.commit('updateUser', response.body)
+          let socketObj = {
+            toIds: beacon.connections.map((connection) => {
+              return connection.userId
+            }),
+            fromId: beacon.author,
+            fromName: this.$store.state.user.fullName
+          }
+          this.$socket.emit('extinguishBeacon', socketObj)
+          this.loadMap()
+          this.$refs.mapModal.close()
+        })
+        .catch(error => {
+          this.beaconLit = !this.beaconLit
+          this.modalLoading = false
+          this.createToast('negative', error.body.message)
+        })
+    },
     checkConnectionErrors (beacon, distance) {
       this.connectionErrors = []
       if (!distance.canConnect) {
@@ -191,6 +326,12 @@ export default {
       this.modalLoading = true
       this.selectedBeacon = beacon
       this.$refs.mapModal.open()
+      if (this.$refs.connectionCarousel) {
+        this.$refs.connectionCarousel.goToSlide(0)
+      }
+      // for (var i = 0; i < 9; i++) {
+      //   beacon.connections.push(beacon.connections[0])
+      // }
       LocationService.getBeaconDistance(LocationService.createBeaconDistanceObject(beacon, this.currentPosition))
         .then((response) => {
           this.modalLoading = false
@@ -204,7 +345,6 @@ export default {
         })
     },
     createConnectionRequest (beacon) {
-      console.log(beacon, this.$store.state.user)
       this.modalLoading = true
       let connectionObj = ConnectionService.createConnectionObject(beacon, this.$store.state.user, this.currentPosition)
       // If user already has a connection request on another beacon, cancel that first
@@ -217,6 +357,7 @@ export default {
               fromId: connectionRequest.userId,
               fromName: connectionRequest.name
             }
+            console.log(socketObj)
             this.$socket.emit('cancelConnectionRequest', socketObj)
             ConnectionService.createConnectionRequest(connectionObj)
               .then((response) => {
@@ -228,6 +369,7 @@ export default {
                   fromId: response.body.outgoingConnectionRequest.userId,
                   fromName: response.body.outgoingConnectionRequest.name
                 }
+                console.log(socketObj)
                 this.$socket.emit('createConnectionRequest', socketObj)
                 this.$refs.mapModal.close()
               })
@@ -300,6 +442,22 @@ export default {
       this.mapHeight = windowHeight - headerHeight - footerHeight + 'px'
       this.$refs.beaconMap.resizePreserveCenter()
     },
+    generateMarkerSize (c, w = 21, h = 34) {
+      let multiplier = 1
+      if (c > 0 && c <= 10) {
+        multiplier = 1.05
+      }
+      else if (c > 10 && c <= 25) {
+        multiplier = 1.15
+      }
+      else if (c > 25 && c <= 100) {
+        multiplier = 1.25
+      }
+      else if (c > 100) {
+        multiplier = 1.35
+      }
+      return new google.maps.Size(w * multiplier, h * multiplier)
+    },
     loadMap (vue) {
       let vm = this || vue
       vm.loading = true
@@ -317,8 +475,15 @@ export default {
                 lng: marker.location.coordinates[0],
                 lat: marker.location.coordinates[1]
               }
-              marker.icon = new google.maps.MarkerImage('http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''), new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34))
-              marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.5 : 1
+              // marker.icon = new google.maps.MarkerImage('http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''), new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34))
+              let icon = {
+                url: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''),
+                scaledSize: vm.generateMarkerSize(marker.connections.length),
+                origin: new google.maps.Point(0, 0),
+                anchor: new google.maps.Point(10, 34)
+              }
+              marker.icon = icon
+              marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.3 : 1
               marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 1
               marker.title = (marker.author._id === vm.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
               bounds.extend(position)
@@ -343,14 +508,12 @@ export default {
     }
   },
   mounted () {
-    const vm = this
-    console.log(this.$store.state.user)
-    this.$q.events.$on('emitResizeMap', function () {
-      if (vm.$refs.beaconMap) {
-        setTimeout(vm.$refs.beaconMap.resizePreserveCenter, 300)
+    this.$q.events.$on('emitResizeMap', () => {
+      if (this.$refs.beaconMap) {
+        setTimeout(this.$refs.beaconMap.resizePreserveCenter, 300)
       }
     })
-    this.loadMap(vm)
+    this.loadMap(this)
   }
 }
 </script>
@@ -362,8 +525,17 @@ export default {
   .map-modal
     .beacon-name
       padding-top 1rem
-    .beacon-tag
+    .beacon-tags
       margin-bottom 0.5rem
+      .beacon-tag
+        margin-bottom 0.5rem
+    .connections-carousel
+      height 110px
+      .q-carousel-track
+        height auto
+        > div
+          padding 0
+          min-height 0
   .map-footer
     height 50px
     padding 0

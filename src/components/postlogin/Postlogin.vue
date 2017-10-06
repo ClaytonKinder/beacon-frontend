@@ -10,6 +10,9 @@
     <audio id="horn">
       <source src="/assets/audio/horn.mp3" type="audio/mpeg">
     </audio>
+    <audio id="notification">
+      <source src="/assets/audio/notification.mp3" type="audio/mpeg">
+    </audio>
   </q-layout>
 </template>
 

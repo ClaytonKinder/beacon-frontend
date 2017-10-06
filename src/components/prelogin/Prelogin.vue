@@ -22,8 +22,6 @@
 import { QLayout, QToolbar, QBtn, QIcon } from 'quasar'
 import PreloginFooter from 'components/prelogin/footer/Footer'
 import PreloginHeader from 'components/prelogin/header/Header'
-import AuthService from 'services/authService.js'
-import Toast from 'mixins/Toast.js'
 
 export default {
   name: 'prelogin',
@@ -34,41 +32,6 @@ export default {
     QIcon,
     PreloginHeader,
     PreloginFooter
-  },
-  mixins: [Toast],
-  data () {
-    return {}
-  },
-  methods: {
-    login: function (data) {
-      AuthService.login(data).then(res => {
-        this.$q.events.$emit('loaded', 'loginForm')
-        localStorage.setItem('token', res.body.token)
-        this.$router.push('/app/beacon')
-      }).catch(err => {
-        this.$q.events.$emit('loaded', 'loginForm')
-        this.createToast('negative', err.body.message)
-      })
-    },
-    register: function (data) {
-      AuthService.register(data).then(res => {
-        this.$q.events.$emit('loaded', 'registerForm')
-        localStorage.setItem('token', res.body.token)
-        this.$router.push('/app/beacon')
-      }).catch(err => {
-        this.$q.events.$emit('loaded', 'registerForm')
-        this.createToast('negative', err.body.message)
-      })
-    }
-  },
-  mounted () {
-    const vm = this
-    this.$q.events.$on('emitLogin', function (data) {
-      vm.login(data)
-    })
-    this.$q.events.$on('emitRegister', function (data) {
-      vm.register(data)
-    })
   }
 }
 </script>

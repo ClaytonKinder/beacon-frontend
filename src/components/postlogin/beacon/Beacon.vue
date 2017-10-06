@@ -242,7 +242,7 @@ export default {
         userId: this.$store.state.user._id,
         additionalSettings: null
       },
-      additionalSettings: {
+      additionalSettings: (this.$store.state.user.beacon && this.$store.state.user.beacon.additionalSettings) || {
         beaconPassword: null,
         ageRange: {
           min: 18,
@@ -346,6 +346,7 @@ export default {
     },
     disconnectFromBeacon (beacon) {
       this.loading = true
+      console.log(beacon)
       ConnectionService.disconnectFromBeacon(beacon)
         .then((response) => {
           this.loading = false
@@ -365,7 +366,7 @@ export default {
     toggleBeacon () {
       this.loading = true
       if (this.formData.beaconLit) {
-        if (this.$store.state.user.settings.playSound || false) {
+        if (this.$store.state.user.settings.playBeaconSound || false) {
           document.getElementById('horn').play()
         }
         BeaconService.lightBeacon(this.formData)
@@ -375,6 +376,7 @@ export default {
             this.$store.commit('updateBeacon', response.body.beacon)
           })
           .catch(error => {
+            this.beaconLit = !this.beaconLit
             this.loading = false
             this.createToast('negative', error.body.message)
           })
@@ -400,6 +402,7 @@ export default {
             this.$socket.emit('extinguishBeacon', socketObj)
           })
           .catch(error => {
+            this.beaconLit = !this.beaconLit
             this.loading = false
             this.createToast('negative', error.body.message)
           })
