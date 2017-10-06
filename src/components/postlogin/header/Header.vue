@@ -19,7 +19,7 @@
       <q-route-tab slot="title" name="beacon" icon="ion-flame" to="/app/beacon" hide="label" label="Beacon" />
       <q-route-tab slot="title" name="map" icon="map" to="/app/map" hide="label" label="Map" />
       <!-- count attribute on q-route-tab elements will be fixed in an upcoming Quasar release -->
-      <!-- <q-route-tab slot="title" name="inbox" icon="mail" to="/app/connection-inbox" hide="label" label="Inbox" :count="$store.state.user.beacon.connections.length" /> -->
+      <q-route-tab slot="title" name="inbox" icon="mail" to="/app/connection-inbox" hide="label" label="Inbox" :count="$store.state.user.beacon && $store.state.user.beacon.incomingConnectionRequests.length" />
       <q-route-tab slot="title" name="settings" icon="settings" to="/app/settings" hide="label" label="Settings" />
     </q-tabs>
   </header>

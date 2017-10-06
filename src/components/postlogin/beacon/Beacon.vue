@@ -326,7 +326,6 @@ export default {
               ConnectionService.removeConnection(connection)
                 .then((response) => {
                   this.loading = false
-                  console.log(response.body)
                   this.$store.commit('updateBeacon', response.body)
                   let socketObj = {
                     toId: connection.userId,
@@ -347,7 +346,6 @@ export default {
     },
     disconnectFromBeacon (beacon) {
       this.loading = true
-      console.log(beacon)
       ConnectionService.disconnectFromBeacon(beacon)
         .then((response) => {
           this.loading = false
