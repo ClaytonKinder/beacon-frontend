@@ -33,7 +33,6 @@ const store = new Vuex.Store({
       let prevConnectionRequestCount = (Helper.methods.doesObjectExist(store.state.user.beacon)) ? store.state.user.beacon.incomingConnectionRequests.length : null
       authService.isAuth()
         .then(response => {
-          console.log(response.body)
           store.commit('updateUser', response.body)
           let currentConnectionRequestCount = (Helper.methods.doesObjectExist(store.state.user.beacon)) ? store.state.user.beacon.incomingConnectionRequests.length : null
           if (prevConnectionRequestCount < currentConnectionRequestCount && store.state.user.settings.playNotificationSound) {

@@ -32,6 +32,12 @@ export default new VueRouter({
           components: {
             default: load('prelogin/home/Home')
           }
+        },
+        {
+          path: 'forgot-password',
+          components: {
+            default: load('prelogin/forgotPassword/ForgotPassword')
+          }
         }
       ]
     },

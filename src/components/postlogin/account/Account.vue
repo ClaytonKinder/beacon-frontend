@@ -34,7 +34,7 @@
               </q-field>
               <q-field
                 :error="$v.informationFormData.dateOfBirth.$dirty && $v.informationFormData.dateOfBirth.$invalid"
-                error-label="Please enter a past date"
+                error-label="You must be at least 18 years old"
               >
                 <q-datetime
                   float-label="Date of birth"
@@ -52,7 +52,7 @@
               <q-radio v-model="informationFormData.gender" val="female" label="Female" /><br/>
               <q-radio v-model="informationFormData.gender" :val="null" label="Prefer not to say" />
               <div class=" button-wrapper text-right">
-                <q-btn color="primary" :disabled="areObjectsEqual(originalInformationFormData, informationFormData)">
+                <q-btn color="primary" :disabled="areObjectsEqual(originalInformationFormData, informationFormData) || $v.informationFormData.$invalid">
                   Update User Information
                 </q-btn>
               </div>
@@ -74,7 +74,7 @@
                 />
               </q-field>
               <div class=" button-wrapper text-right">
-                <q-btn color="primary" :disabled="areObjectsEqual(originalEmailFormData, emailFormData)">
+                <q-btn color="primary" :disabled="areObjectsEqual(originalEmailFormData, emailFormData) || $v.emailFormData.$invalid">
                   Update Email Address
                 </q-btn>
               </div>
@@ -84,7 +84,7 @@
             <form class="relative-position" name="userPasswordForm" @submit.prevent="updateUserPassword">
               <q-field
                 :error="$v.passwordFormData.currentPassword.$dirty && $v.passwordFormData.currentPassword.$invalid"
-                error-label="Please enter your current password"
+                error-label="Current password must be at least 8 characters"
               >
                 <q-input
                   type="password"
@@ -96,7 +96,7 @@
               </q-field>
               <q-field
                 :error="$v.passwordFormData.newPassword.$dirty && $v.passwordFormData.newPassword.$invalid"
-                error-label="Please enter your desired password"
+                error-label="New password must be at least 8 characters"
               >
                 <q-input
                   type="password"
@@ -108,7 +108,7 @@
               </q-field>
               <q-field
                 :error="$v.passwordFormData.newPasswordConfirmation.$dirty && $v.passwordFormData.newPasswordConfirmation.$invalid"
-                error-label="Please make sure that this matches your desired password"
+                error-label="New password confirmation must equal new password"
               >
                 <q-input
                   type="password"
@@ -119,7 +119,7 @@
                 />
               </q-field>
               <div class=" button-wrapper text-right">
-                <q-btn color="primary" :disabled="areObjectsEqual(originalPasswordFormData, passwordFormData)">
+                <q-btn color="primary" :disabled="areObjectsEqual(originalPasswordFormData, passwordFormData) || $v.passwordFormData.$invalid">
                   Update Password
                 </q-btn>
               </div>
@@ -215,11 +215,21 @@ export default {
       },
       dateOfBirth: {
         required,
-        isInThePast (value) {
-          let date = new Date(value)
+        isInThePast (dateOfBirth) {
+          let date = new Date(dateOfBirth)
           let now = new Date()
           now.setHours(0, 0, 0, 0)
           return (date < now)
+        },
+        isOlderThanEighteen (dateOfBirth) {
+          let today = new Date()
+          let dob = new Date(dateOfBirth)
+          var age = today.getFullYear() - dob.getFullYear()
+          var m = today.getMonth() - dob.getMonth()
+          if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+            age--
+          }
+          return age >= 18
         }
       }
     },

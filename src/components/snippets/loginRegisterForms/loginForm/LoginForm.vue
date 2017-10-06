@@ -22,6 +22,9 @@
         float-label="Password"
       />
     </q-field>
+    <div>
+      <small><a @click="$router.push('/forgot-password')">I forgot my password</a></small>
+    </div>
     <div class="button-wrapper text-center">
       <q-btn :disabled="$v.formData.$invalid" type="submit" color="primary">
         Login

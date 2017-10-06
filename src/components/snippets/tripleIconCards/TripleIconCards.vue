@@ -1,5 +1,6 @@
 <template>
   <div class="prelogin-info-row row lg-gutter no-vert-gutter">
+    <q-window-resize-observable @resize="equalizeHeight" />
     <div class="col col-lg-4 col-md-6 col-sm-12 col-xs-12 no-margin">
       <q-card class="info-card">
         <q-card-media class="info-icon text-center block bg-primary">
@@ -49,7 +50,14 @@
 </template>
 
 <script>
-import { QCard, QCardMedia, QCardTitle, QCardMain } from 'quasar'
+import {
+  QCard,
+  QCardMedia,
+  QCardTitle,
+  QCardMain,
+  QWindowResizeObservable,
+  debounce
+} from 'quasar'
 
 export default {
   name: 'TripleIconCards',
@@ -57,13 +65,28 @@ export default {
     QCard,
     QCardMedia,
     QCardTitle,
-    QCardMain
+    QCardMain,
+    QWindowResizeObservable
   },
   data () {
     return {}
   },
-
-  methods: {}
+  methods: {
+    equalizeHeight: debounce(() => {
+      let elements = document.querySelectorAll('.info-card')
+      if (!elements) return
+      Array.from(elements).forEach((x = HTMLElement) => {
+        x.style.height = 'initial'
+      })
+      const elementHeights = Array.from(elements)
+        .map(x => x.getBoundingClientRect().height)
+      const maxHeight = elementHeights.reduce((prev, curr) => {
+        return curr > prev ? curr : prev
+      }, 0)
+      Array.from(elements)
+        .forEach(function (x = HTMLElement) { x.style.height = `${maxHeight}px` })
+    }, 100)
+  }
 }
 </script>
 

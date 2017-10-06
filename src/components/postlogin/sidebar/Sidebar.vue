@@ -48,8 +48,28 @@ export default {
     QItemMain,
     QSideLink
   },
-  data () {
-    return {}
+  computed: {
+    emptyUser () {
+      if (this.$store.state.user) {
+        let obj = JSON.parse(JSON.stringify(this.$store.state.user))
+        Object.keys(obj).forEach((key) => {
+          if (typeof obj[key] === 'object') {
+            // If property is an array
+            if (Array.isArray(obj[key])) {
+              obj[key] = []
+            }
+            // If property is an object
+            else {
+              obj[key] = {}
+            }
+          }
+          else {
+            obj[key] = null
+          }
+        })
+        return obj
+      }
+    }
   },
   methods: {
     toggleRight () {
@@ -65,7 +85,6 @@ export default {
     },
     logout () {
       localStorage.removeItem('token')
-      this.$store.commit('updateUser', null)
       this.$router.push('/')
     }
   }

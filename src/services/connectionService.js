@@ -30,7 +30,8 @@ export default {
       userLng: userPosition.lng,
       ownerName: beacon.author.fullName,
       name: user.fullName,
-      gravatar: user.gravatar
+      gravatar: user.gravatar,
+      user: user
     }
   }
 }

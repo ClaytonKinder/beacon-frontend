@@ -80,14 +80,23 @@
             >
             Connect
             </q-btn>
-            <q-btn
-              v-if="showButtons('connect-password')"
-              color="secondary"
-              icon="lock"
-              @click="createConnectionRequest(selectedBeacon)"
-            >
-            Connect with Password
-            </q-btn>
+            <form class="beacon-password-form" v-if="showButtons('connect-password')" ref="beaconPasswordForm" @submit.prevent="verifyBeaconPassword">
+              <q-input
+                v-model="beaconPassword"
+                max-length="50"
+                type="password"
+                color="secondary"
+                placeholder="Enter beacon password"
+                inverted
+                :after="[
+                  {
+                    icon: 'arrow_forward',
+                    handler: verifyBeaconPassword
+                  }
+                ]"
+              />
+            </form>
+
             <q-btn
               v-if="showButtons('cancel-request')"
               color="negative"
@@ -131,6 +140,7 @@ import {
   QWindowResizeObservable,
   QModal,
   QModalLayout,
+  QInput,
   QBtn,
   QIcon,
   QToolbar,
@@ -161,6 +171,7 @@ export default {
     QWindowResizeObservable,
     QModal,
     QModalLayout,
+    QInput,
     QBtn,
     QIcon,
     QToolbar,
@@ -179,6 +190,7 @@ export default {
       modalLoading: false,
       distanceInfo: null,
       connectionErrors: [],
+      beaconPassword: null,
       mapOptions: {
         lat: 0,
         lng: 0,
@@ -259,10 +271,33 @@ export default {
         )
       }
     },
+    verifyBeaconPassword () {
+      this.modalLoading = true
+      let passwordObj = {
+        beaconId: this.selectedBeacon._id,
+        password: this.beaconPassword
+      }
+      BeaconService.verifyBeaconPassword(passwordObj)
+        .then((response) => {
+          this.modalLoading = false
+          if (response.body) {
+            this.createConnectionRequest(this.selectedBeacon)
+          }
+          else {
+            this.createToast('negative', 'Incorrect password')
+          }
+        })
+        .catch((error) => {
+          this.modalLoading = false
+          this.createToast('negative', error.body.message)
+        })
+    },
     disconnectFromBeacon (beacon) {
       this.modalLoading = true
       beacon.userId = this.$store.state.user._id
-      beacon.beaconId = beacon._id
+      if (!beacon.beaconId) {
+        beacon.beaconId = beacon._id
+      }
       ConnectionService.disconnectFromBeacon(beacon)
         .then((response) => {
           this.modalLoading = false
@@ -329,9 +364,6 @@ export default {
       if (this.$refs.connectionCarousel) {
         this.$refs.connectionCarousel.goToSlide(0)
       }
-      // for (var i = 0; i < 9; i++) {
-      //   beacon.connections.push(beacon.connections[0])
-      // }
       LocationService.getBeaconDistance(LocationService.createBeaconDistanceObject(beacon, this.currentPosition))
         .then((response) => {
           this.modalLoading = false
@@ -347,6 +379,7 @@ export default {
     createConnectionRequest (beacon) {
       this.modalLoading = true
       let connectionObj = ConnectionService.createConnectionObject(beacon, this.$store.state.user, this.currentPosition)
+
       // If user already has a connection request on another beacon, cancel that first
       if (this.doesObjectExist(this.$store.state.user.outgoingConnectionRequest) && this.$store.state.user.outgoingConnectionRequest.beaconId !== beacon.beaconId) {
         let connectionRequest = JSON.parse(JSON.stringify(this.$store.state.user.outgoingConnectionRequest))
@@ -357,7 +390,6 @@ export default {
               fromId: connectionRequest.userId,
               fromName: connectionRequest.name
             }
-            console.log(socketObj)
             this.$socket.emit('cancelConnectionRequest', socketObj)
             ConnectionService.createConnectionRequest(connectionObj)
               .then((response) => {
@@ -369,7 +401,6 @@ export default {
                   fromId: response.body.outgoingConnectionRequest.userId,
                   fromName: response.body.outgoingConnectionRequest.name
                 }
-                console.log(socketObj)
                 this.$socket.emit('createConnectionRequest', socketObj)
                 this.$refs.mapModal.close()
               })
@@ -382,10 +413,46 @@ export default {
             this.createToast('negative', error.body.message)
           })
       }
+      // If user is already connected to another beacon, disconnect from that beacon first
+      else if (this.doesObjectExist(this.$store.state.user.connectedTo) && this.$store.state.user.connectedTo.beaconId !== beacon.beaconId) {
+        ConnectionService.disconnectFromBeacon(this.$store.state.user.connectedTo)
+          .then((response) => {
+            this.modalLoading = false
+            this.$store.commit('updateUser', response.body)
+            let socketObj = {
+              toId: beacon.author._id,
+              fromId: beacon.userId,
+              fromName: beacon.name
+            }
+            this.$socket.emit('disconnectFromBeacon', socketObj)
+            ConnectionService.createConnectionRequest(connectionObj)
+              .then((response) => {
+                this.modalLoading = false
+                this.$store.commit('updateUser', response.body)
+                this.createToast('positive', 'Your connection request has been sent successfully')
+                let socketObj = {
+                  toId: response.body.outgoingConnectionRequest.beaconOwnerId,
+                  fromId: response.body.outgoingConnectionRequest.userId,
+                  fromName: response.body.outgoingConnectionRequest.name
+                }
+                this.$socket.emit('createConnectionRequest', socketObj)
+                this.$refs.mapModal.close()
+              })
+              .catch((error) => {
+                this.modalLoading = false
+                this.createToast('negative', error.body.message)
+              })
+          })
+          .catch((error) => {
+            this.modalLoading = false
+            this.createToast('negative', error.body.message)
+          })
+      }
       else {
         ConnectionService.createConnectionRequest(connectionObj)
           .then((response) => {
             this.modalLoading = false
+            this.$refs.mapModal.close()
             this.$store.commit('updateUser', response.body)
             this.createToast('positive', 'Your connection request has been sent successfully')
             let socketObj = {
@@ -394,7 +461,6 @@ export default {
               fromName: response.body.outgoingConnectionRequest.name
             }
             this.$socket.emit('createConnectionRequest', socketObj)
-            this.$refs.mapModal.close()
           })
           .catch((error) => {
             this.modalLoading = false
@@ -529,6 +595,8 @@ export default {
       margin-bottom 0.5rem
       .beacon-tag
         margin-bottom 0.5rem
+    .beacon-password-form
+      display inline-block
     .connections-carousel
       height 110px
       .q-carousel-track

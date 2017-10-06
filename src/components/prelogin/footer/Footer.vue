@@ -1,7 +1,7 @@
 <template>
   <q-toolbar class="bg-primary" slot="footer">
     <q-toolbar-title class="text-center">
-      <span slot="subtitle">Copyright {{new Date().getFullYear()}} Clayton Kinder</span>
+      <span slot="subtitle">Copyright {{new Date().getFullYear()}} <a class="footer-link" href="http://claytonkinder.com" target="_blank">Clayton Kinder</a></span>
     </q-toolbar-title>
   </q-toolbar>
 </template>
@@ -25,5 +25,9 @@ export default {
 </script>
 
 <style lang="stylus">
-
+  .footer-link
+    color white
+    text-decoration underline
+    &:hover
+      color white
 </style>

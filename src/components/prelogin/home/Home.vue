@@ -32,7 +32,7 @@ import TripleIconCards from 'components/snippets/tripleIconCards/TripleIconCards
 import LoginRegisterForms from 'components/snippets/loginRegisterForms/LoginRegisterForms'
 
 export default {
-  name: 'home',
+  name: 'Home',
   components: {
     QBtn,
     QIcon,

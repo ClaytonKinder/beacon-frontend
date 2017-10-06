@@ -38,7 +38,7 @@
     </q-field>
     <q-field
       :error="$v.formData.dateOfBirth.$dirty && $v.formData.dateOfBirth.$invalid"
-      error-label="Please enter a past date"
+      error-label="You must be at least 18 years old"
     >
       <q-datetime
         float-label="Date of birth"
@@ -136,11 +136,21 @@ export default {
       },
       dateOfBirth: {
         required,
-        isInThePast (value) {
-          let date = new Date(value)
+        isInThePast (dateOfBirth) {
+          let date = new Date(dateOfBirth)
           let now = new Date()
           now.setHours(0, 0, 0, 0)
           return (date < now)
+        },
+        isOlderThanEighteen (dateOfBirth) {
+          let today = new Date()
+          let dob = new Date(dateOfBirth)
+          var age = today.getFullYear() - dob.getFullYear()
+          var m = today.getMonth() - dob.getMonth()
+          if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+            age--
+          }
+          return age >= 18
         }
       },
       password: {
