@@ -84,7 +84,10 @@ export default {
       }
     },
     logout () {
-      localStorage.removeItem('token')
+      // localStorage.removeItem('token')
+      // document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${location.pathname};`
+      this.$cookie.delete('token')
+      console.log(this.$cookie.get('token'))
       this.$router.push('/')
     }
   }

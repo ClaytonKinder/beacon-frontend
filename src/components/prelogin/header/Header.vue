@@ -1,7 +1,7 @@
 <template>
   <q-toolbar slot="header">
     <q-toolbar-title>
-      Beacon
+      <a @click.prevent="$router.push('/')">Beacon</a>
     </q-toolbar-title>
   </q-toolbar>
 </template>
@@ -30,4 +30,8 @@ export default {
     top 0
     width 100%
     background transparent
+    a
+      color white
+      &:hover
+        color white
 </style>

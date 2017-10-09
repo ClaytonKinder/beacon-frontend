@@ -19,11 +19,13 @@ import store from './store'
 import Vuelidate from 'vuelidate'
 import VueSocketio from 'vue-socket.io'
 import io from 'socket.io-client'
+import VueCookie from 'vue-cookie'
 import * as VueGoogleMaps from 'vue2-google-maps'
 Vue.use(VueSocketio, io(process.env.SERVER_URL), store)
 Vue.use(require('vue-moment'))
 Vue.use(Vuelidate)
 Vue.use(VueResource)
+Vue.use(VueCookie)
 Vue.use(VueGoogleMaps, {
   load: {
     key: process.env.MAPS_API_KRY,
@@ -32,24 +34,41 @@ Vue.use(VueGoogleMaps, {
 })
 
 router.beforeEach((to, from, next) => {
+  console.log(1, VueCookie.get('token'))
   if (to.matched.some(record => record.meta.requiresAuth)) {
     authService.isAuth()
       .then(response => {
-        store.commit('updateUser', response.body)
-        next(response.body)
+        if (response.body && VueCookie.get('token')) {
+          store.commit('updateUser', response.body)
+          next(response.body)
+        }
+        else {
+          VueCookie.delete('token')
+          next({
+            path: '/'
+          })
+        }
       })
       .catch(() => {
-        localStorage.setItem('userId', '')
+        VueCookie.delete('token')
         next({
           path: '/'
         })
       })
   }
   else if (to.matched.some(record => record.meta.onlyIfLoggedOut)) {
+    if (to.name && to.name === 'reset-password') {
+      VueCookie.delete('token')
+    }
     authService.isAuth()
       .then(response => {
-        store.commit('updateUser', response.body)
-        next('/app/beacon')
+        if (response.body && VueCookie.get('token')) {
+          store.commit('updateUser', response.body)
+          next('/app/beacon')
+        }
+        else {
+          next()
+        }
       })
       .catch(() => {
         next()
@@ -61,11 +80,11 @@ router.beforeEach((to, from, next) => {
 })
 
 Vue.http.interceptors.push(function (request, next) {
-  request.headers.set('x-access-token', localStorage.getItem('token'))
+  request.headers.set('x-access-token', VueCookie.get('token'))
   next(function (response) {
     if (response.headers.has('x-access-token')) {
       var token = response.headers('x-access-token')
-      localStorage.setItem('token', token)
+      VueCookie.set('token', token)
     }
   })
 })

@@ -2,19 +2,32 @@
   <div class="column items-center no-wrap">
     <div class="prelogin-card shadow-4 bg-white column items-center justify-center no-wrap">
       <div class="forgot-password-form-title">
-        Enter your email below to begin the password reset process
+        Enter your new password below
       </div>
-      <form class="relative-position" name="passwordResetEmailForm" @submit.prevent="sendPasswordResetEmail">
+      {{$route.query.resetPasswordToken}}
+      <form class="relative-position" name="passwordResetEmailForm" @submit.prevent="resetPassword">
         <q-field
-          :error="$v.formData.email.$dirty && $v.formData.email.$invalid"
-          error-label="Please enter a valid email address"
+          :error="$v.formData.password.$dirty && $v.formData.password.$invalid"
+          error-label="Please enter a secure password that's between 8 and 50 characters"
         >
           <q-input
-            type="email"
-            v-model.trim="formData.email"
-            @blur="$v.formData.email.$touch()"
-            max-length="100"
-            float-label="Email"
+            max-length="50"
+            type="password"
+            v-model.trim="formData.password"
+            @blur="$v.formData.password.$touch()"
+            float-label="Password"
+          />
+        </q-field>
+        <q-field
+          :error="$v.formData.passwordConfirmation.$dirty && $v.formData.passwordConfirmation.$invalid"
+          error-label="Please make sure that this matches your password"
+        >
+          <q-input
+            max-length="50"
+            type="password"
+            v-model.trim="formData.passwordConfirmation"
+            @blur="$v.formData.passwordConfirmation.$touch()"
+            float-label="Confirm Password"
           />
         </q-field>
         <div class="button-wrapper text-center">
@@ -59,13 +72,13 @@ import {
   QInnerLoading,
   QSpinnerGears
 } from 'quasar'
-import { required, email, maxLength } from 'vuelidate/lib/validators'
+import { required, minLength, maxLength, sameAs } from 'vuelidate/lib/validators'
 import AuthService from 'services/authService.js'
 import TripleIconCards from 'components/snippets/tripleIconCards/TripleIconCards'
 import Toast from 'mixins/Toast.js'
 
 export default {
-  name: 'ForgotPassword',
+  name: 'ResetPassword',
   components: {
     QBtn,
     QIcon,
@@ -80,32 +93,74 @@ export default {
     return {
       loading: false,
       formData: {
-        email: 'ClaytonAlanKinder@gmail.com'
+        email: '',
+        password: '',
+        passwordConfirmation: '',
+        resetPasswordToken: this.$route.params.resetPasswordToken
       }
     }
   },
   validations: {
     formData: {
-      email: {
+      password: {
         required,
-        email,
-        maxLength: maxLength(100)
+        minLength: minLength(8),
+        maxLength: maxLength(50)
+      },
+      passwordConfirmation: {
+        required,
+        sameAsPassword: sameAs('password'),
+        minLength: minLength(8),
+        maxLength: maxLength(50)
       }
     }
   },
   methods: {
-    sendPasswordResetEmail () {
+    resetPassword () {
       this.loading = true
-      AuthService.forgotPassword(this.formData)
+      AuthService.resetPassword(this.formData)
         .then((response) => {
+          if (response.body) {
+            this.loading = false
+            this.createToast('positive', 'Your password has been successfully reset')
+            this.$router.push('/')
+          }
+          else {
+            this.loading = false
+            this.createToast('negative', 'Could not reset your password at this time')
+          }
+        })
+        .catch((error) => {
           this.loading = false
-          this.createToast('positive', 'You have been emailed a password reset link')
+          this.createToast('negative', error.body.message)
+        })
+    }
+  },
+  mounted () {
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;'
+    console.log(document.cookie)
+    if (this.$route.params && this.$route.params.resetPasswordToken) {
+      let resetPasswordToken = {
+        resetPasswordToken: this.$route.params.resetPasswordToken
+      }
+      AuthService.validateResetPasswordToken(resetPasswordToken)
+        .then((response) => {
+          if (response.body) {
+            this.formData.email = response.body
+          }
+          else {
+            this.$router.push('/')
+            this.createToast('negative', 'Password reset is invalid or has expired')
+          }
+        })
+        .catch((error) => {
           this.$router.push('/')
+          this.createToast('negative', error.body.message)
         })
-        .catch(() => {
-          this.loading = false
-          this.createToast('negative', 'Unable to send email at this time')
-        })
+    }
+    else {
+      this.$router.push('/')
+      this.createToast('negative', 'A password reset token was not provided')
     }
   }
 }

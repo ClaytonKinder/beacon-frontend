@@ -77,7 +77,8 @@ export default {
     login () {
       this.loading = true
       AuthService.login(this.formData).then(res => {
-        localStorage.setItem('token', res.body.token)
+        // localStorage.setItem('token', res.body.token)
+        this.$cookie.set('token', res.body.token, 1)
         this.$router.push('/app/beacon')
         this.loading = false
       }).catch(err => {

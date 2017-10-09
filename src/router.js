@@ -1,5 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+// import authService from './services/authService'
+// import store from './store'
 
 Vue.use(VueRouter)
 
@@ -37,6 +39,13 @@ export default new VueRouter({
           path: 'forgot-password',
           components: {
             default: load('prelogin/forgotPassword/ForgotPassword')
+          }
+        },
+        {
+          name: 'reset-password',
+          path: 'reset-password/:resetPasswordToken',
+          components: {
+            default: load('prelogin/resetPassword/ResetPassword')
           }
         }
       ]
