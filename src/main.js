@@ -34,7 +34,6 @@ Vue.use(VueGoogleMaps, {
 })
 
 router.beforeEach((to, from, next) => {
-  console.log(1, VueCookie.get('token'))
   if (to.matched.some(record => record.meta.requiresAuth)) {
     authService.isAuth()
       .then(response => {

@@ -48,29 +48,6 @@ export default {
     QItemMain,
     QSideLink
   },
-  computed: {
-    emptyUser () {
-      if (this.$store.state.user) {
-        let obj = JSON.parse(JSON.stringify(this.$store.state.user))
-        Object.keys(obj).forEach((key) => {
-          if (typeof obj[key] === 'object') {
-            // If property is an array
-            if (Array.isArray(obj[key])) {
-              obj[key] = []
-            }
-            // If property is an object
-            else {
-              obj[key] = {}
-            }
-          }
-          else {
-            obj[key] = null
-          }
-        })
-        return obj
-      }
-    }
-  },
   methods: {
     toggleRight () {
       this.$emit('toggleRight')
@@ -84,10 +61,7 @@ export default {
       }
     },
     logout () {
-      // localStorage.removeItem('token')
-      // document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${location.pathname};`
       this.$cookie.delete('token')
-      console.log(this.$cookie.get('token'))
       this.$router.push('/')
     }
   }

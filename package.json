@@ -1,9 +1,9 @@
 {
-  "name": "quasar-app",
-  "productName": "Quasar App",
-  "version": "0.0.1",
-  "description": "A Quasar App",
-  "author": "Your Name <your@email.com>",
+  "name": "beacon-frontend",
+  "productName": "Beacon",
+  "version": "1.0.0",
+  "description": "Explore the world around you",
+  "author": "Clayton Kinder <ClaytonAlanKinder@gmail.com>",
   "scripts": {
     "clean": "node build/script.clean.js",
     "dev": "node build/script.dev.js",
