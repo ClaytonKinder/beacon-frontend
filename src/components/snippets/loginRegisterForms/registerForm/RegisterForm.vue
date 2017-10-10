@@ -171,7 +171,7 @@ export default {
     register () {
       this.loading = true
       AuthService.register(this.formData).then(res => {
-        localStorage.setItem('token', res.body.token)
+        this.$cookie.set('token', res.body.token)
         this.$router.push('/app/beacon')
         this.loading = false
       }).catch(err => {

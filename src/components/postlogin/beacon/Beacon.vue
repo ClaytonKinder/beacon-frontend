@@ -446,6 +446,7 @@ export default {
     }).catch(function (error) {
       this.createToast('negative', error.body.message)
     })
+    console.log(this.$store.state.user)
   }
 }
 </script>

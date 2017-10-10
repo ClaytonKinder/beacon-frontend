@@ -127,7 +127,7 @@
     </q-modal>
     <q-toolbar class="map-footer row justify-center items-center">
       <q-btn class="icon-button" flat icon="my_location" @click.prevent="centerMap()"></q-btn>
-      <q-btn class="icon-button" flat icon="ion-refresh" @click.prevent="loadMap()"></q-btn>
+      <q-btn class="icon-button" flat icon="ion-refresh" @click.prevent="loadMap(null, false)"></q-btn>
     </q-toolbar>
     <q-inner-loading :visible="loading">
       <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
@@ -350,6 +350,24 @@ export default {
         this.connectionErrors.push('You are not close enough to connect')
       }
     },
+    setMapCenter (lng, lat) {
+      let user = this.$store.state.user
+      // If user has a beacon, center on that
+      if (this.doesObjectExist(user.beacon) && !this.doesObjectExist(user.connectedTo)) {
+        this.mapOptions.lng = user.beacon.location.coordinates[0]
+        this.mapOptions.lat = user.beacon.location.coordinates[1]
+      }
+      // If user is connected to another beacon, center on that
+      else if (this.doesObjectExist(user.connectedTo) && !this.doesObjectExist(user.beacon)) {
+        this.mapOptions.lng = user.connectedTo.lng
+        this.mapOptions.lat = user.connectedTo.lat
+      }
+      // If user does not have a beacon nor is connected to another beacon, center on their current // location
+      else {
+        this.mapOptions.lng = lng
+        this.mapOptions.lat = lat
+      }
+    },
     centerMap () {
       let latLng = new google.maps.LatLng(this.mapOptions.lat, this.mapOptions.lng)
       this.$refs.beaconMap.panTo(latLng)
@@ -379,7 +397,6 @@ export default {
     createConnectionRequest (beacon) {
       this.modalLoading = true
       let connectionObj = ConnectionService.createConnectionObject(beacon, this.$store.state.user, this.currentPosition)
-
       // If user already has a connection request on another beacon, cancel that first
       if (this.doesObjectExist(this.$store.state.user.outgoingConnectionRequest) && this.$store.state.user.outgoingConnectionRequest.beaconId !== beacon.beaconId) {
         let connectionRequest = JSON.parse(JSON.stringify(this.$store.state.user.outgoingConnectionRequest))
@@ -524,13 +541,11 @@ export default {
       }
       return new google.maps.Size(w * multiplier, h * multiplier)
     },
-    loadMap (vue) {
+    loadMap (vue, centerAfterwards = true) {
       let vm = this || vue
       vm.loading = true
       LocationService.getCurrentPosition().then(function (response) {
-        let beacon = vm.$store.state.user.beacon
-        vm.mapOptions.lng = (beacon) ? beacon.location.coordinates[0] : response.body.location.lng
-        vm.mapOptions.lat = (beacon) ? beacon.location.coordinates[1] : response.body.location.lat
+        vm.setMapCenter(response.body.location.lng, response.body.location.lat)
         vm.currentPosition.lng = vm.mapOptions.lng
         vm.currentPosition.lat = vm.mapOptions.lat
         BeaconService.getNearbyBeacons(vm.mapOptions).then(response => {
@@ -541,7 +556,6 @@ export default {
                 lng: marker.location.coordinates[0],
                 lat: marker.location.coordinates[1]
               }
-              // marker.icon = new google.maps.MarkerImage('http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''), new google.maps.Size(21, 34), new google.maps.Point(0, 0), new google.maps.Point(10, 34))
               let icon = {
                 url: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''),
                 scaledSize: vm.generateMarkerSize(marker.connections.length),
@@ -560,23 +574,38 @@ export default {
           else {
             bounds.extend(vm.currentPosition)
           }
-
-          vm.$refs.beaconMap.fitBounds(bounds)
+          if (centerAfterwards) {
+            vm.$refs.beaconMap.fitBounds(bounds)
+          }
+          if (!vm.doesObjectExist(vm.$store.state.user.beacon) && !vm.doesObjectExist(vm.$store.state.user.connectedTo)) {
+            let mapMarker = (vm.$store.state.user.gender === 'female') ? 'femaleMapMarker' : 'maleMapMarker'
+            vm.markers.push({
+              position: {
+                lng: vm.mapOptions.lng,
+                lat: vm.mapOptions.lat
+              },
+              icon: `${process.env.SITE_URL}/assets/images/${mapMarker}.png`,
+              opacity: 1,
+              zIndex: 10,
+              title: 'You'
+            })
+          }
           vm.loading = false
-        }).catch(error => {
+        }).catch(() => {
           vm.loading = false
-          vm.createToast('negative', error.body.message)
+          vm.createToast('negative', 'Could not generate map at this time')
         })
-      }).catch(function (err) {
+      }).catch((error) => {
+        console.log(error)
         vm.loading = false
-        this.createToast('negative', err.body.message)
+        this.createToast('negative', 'Could not generate map at this time')
       })
     }
   },
   mounted () {
-    this.$q.events.$on('emitResizeMap', () => {
+    this.$q.events.$on('emitResizeMap', (animationLength = 300) => {
       if (this.$refs.beaconMap) {
-        setTimeout(this.$refs.beaconMap.resizePreserveCenter, 300)
+        setTimeout(this.$refs.beaconMap.resizePreserveCenter, animationLength)
       }
     })
     this.loadMap(this)
