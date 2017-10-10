@@ -149,7 +149,6 @@ export default {
     },
     approveConnectionRequest (request) {
       this.loading = true
-      console.log(request)
       ConnectionService.approveConnectionRequest(request)
         .then((response) => {
           this.loading = false

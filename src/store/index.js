@@ -52,21 +52,6 @@ const store = new Vuex.Store({
         Toast.methods.createToast(data.type, data.message)
       }
     }
-    // socket_denyConnectionRequest: (context, data) => {
-    //   context.dispatch('refreshUser')
-    //   Toast.methods.createToast(data.type, data.message)
-    // },
-    // socket_disconnectFromBeacon: (context, data) => {
-    //   context.dispatch('refreshUser')
-    // },
-    // socket_removeConnection: (context, data) => {
-    //   context.dispatch('refreshUser')
-    //   Toast.methods.createToast(data.type, data.message)
-    // },
-    // socket_extinguishBeacon: (context, data) => {
-    //   context.dispatch('refreshUser')
-    //   Toast.methods.createToast(data.type, data.message)
-    // }
   }
 })
 

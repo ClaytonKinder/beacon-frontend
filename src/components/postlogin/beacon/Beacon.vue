@@ -87,7 +87,8 @@
         </q-card-title>
         <div class="connection-body text-center">
           <div class="connection-text">
-            You are connected to the beacon of {{$store.state.user.connectedTo.ownerName}}
+            <!-- You are connected to the beacon of {{$store.state.user.connectedTo.ownerName}} -->
+            You are connected to {{generatePossessive($store.state.user.connectedTo.ownerName)}} beacon
           </div>
           <q-btn color="primary" @click.prevent="disconnectFromBeacon($store.state.user.connectedTo)">Disconnect</q-btn>
         </div>
@@ -251,6 +252,7 @@ export default {
         genderRestriction: null,
         tags: []
       },
+      connectedBeacon: null,
       search: '',
       page: 1,
       limit: 12,
@@ -446,7 +448,6 @@ export default {
     }).catch(function (error) {
       this.createToast('negative', error.body.message)
     })
-    console.log(this.$store.state.user)
   }
 }
 </script>

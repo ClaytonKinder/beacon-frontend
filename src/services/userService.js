@@ -14,7 +14,6 @@ export default {
     return Vue.http.post('user/updateuseremail', data)
   },
   updateUserPassword (data) {
-    console.log(data)
     return Vue.http.post('user/updateuserpassword', data)
   }
 }

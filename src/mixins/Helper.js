@@ -57,6 +57,16 @@ export default {
       }
 
       return bool()
+    },
+    generatePossessive (str) {
+      if (str.substr(str.length - 1) !== 's') {
+        str += '\''
+        str += 's'
+      }
+      else {
+        str += '\''
+      }
+      return str
     }
   }
 }

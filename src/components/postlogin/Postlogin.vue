@@ -28,15 +28,14 @@ import {
   QItem,
   QItemSide,
   QItemMain,
-  QSideLink
+  QSideLink,
+  Alert
 } from 'quasar'
 import PostloginHeader from 'components/postlogin/header/Header'
 import Sidebar from 'components/postlogin/sidebar/Sidebar'
-import Toast from 'mixins/Toast.js'
 
 export default {
   name: 'postlogin',
-  mixins: [Toast],
   components: {
     QLayout,
     QToolbar,
@@ -50,8 +49,7 @@ export default {
     QItemMain,
     QSideLink,
     PostloginHeader,
-    Sidebar,
-    Toast
+    Sidebar
   },
   data () {
     return {
@@ -70,6 +68,15 @@ export default {
   },
   mounted () {
     this.$socket.emit('userNavigatedToPostlogin', this.socketClientObj)
+    if (this.$q.platform.is.desktop && !this.$cookie.get('has-seen-desktop-alert')) {
+      Alert.create({
+        html: 'Desktop geolocation is not as accurate as mobile devices. If your location is inaccurate, consider switching to a mobile device.',
+        position: 'bottom-center',
+        onDismiss: () => {
+          this.$cookie.set('has-seen-desktop-alert', true)
+        }
+      })
+    }
   },
   beforeDestroy () {
     this.$socket.emit('userNavigatedToPrelogin', this.socketClientObj)

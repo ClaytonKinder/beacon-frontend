@@ -25,6 +25,7 @@
     <q-modal
       ref="mapModal"
       class="relative-position map-modal mobile-modal-padding footer-no-shadow"
+      v-model="modalOpen"
       :content-css="{minWidth: '400px', minHeight: '400px'}"
     >
       <q-modal-layout
@@ -72,7 +73,7 @@
         </div>
         <q-toolbar class="bg-white" slot="footer">
           <div class="q-toolbar-title text-right">
-            <q-btn flat color="primary" @click.prevent="$refs.mapModal.close()">Close</q-btn>
+            <q-btn flat color="primary" @click="closeMapModal">Close</q-btn>
             <q-btn
               v-if="showButtons('connect')"
               color="primary"
@@ -191,6 +192,7 @@ export default {
       distanceInfo: null,
       connectionErrors: [],
       beaconPassword: null,
+      modalOpen: false,
       mapOptions: {
         lat: 0,
         lng: 0,
@@ -240,7 +242,6 @@ export default {
           this.distanceInfo.canConnect &&
           this.$store.state.user.outgoingConnectionRequest.beaconId !== this.selectedBeacon._id &&
           this.$store.state.user.connectedTo.beaconId !== this.selectedBeacon._id &&
-          (!this.$store.state.user.beacon || this.selectedBeacon._id !== this.$store.state.user.beacon._id) &&
           !this.$store.state.user.beacon
         )
       }
@@ -251,7 +252,7 @@ export default {
           this.distanceInfo.canConnect &&
           this.$store.state.user.outgoingConnectionRequest.beaconId !== this.selectedBeacon._id &&
           this.$store.state.user.connectedTo.beaconId !== this.selectedBeacon._id &&
-          (!this.$store.state.user.beacon || this.selectedBeacon._id !== this.$store.state.user.beacon._id)
+          !this.$store.state.user.beacon
         )
       }
       else if (key === 'cancel-request') {
@@ -378,7 +379,7 @@ export default {
     openMapModal (beacon) {
       this.modalLoading = true
       this.selectedBeacon = beacon
-      this.$refs.mapModal.open()
+      this.modalOpen = true
       if (this.$refs.connectionCarousel) {
         this.$refs.connectionCarousel.goToSlide(0)
       }
@@ -393,6 +394,10 @@ export default {
           this.$refs.mapModal.close()
           this.createToast('negative', error.body.message)
         })
+    },
+    closeMapModal () {
+      this.modalOpen = false
+      this.$refs.mapModal.close()
     },
     createConnectionRequest (beacon) {
       this.modalLoading = true
@@ -595,8 +600,7 @@ export default {
           vm.loading = false
           vm.createToast('negative', 'Could not generate map at this time')
         })
-      }).catch((error) => {
-        console.log(error)
+      }).catch(() => {
         vm.loading = false
         this.createToast('negative', 'Could not generate map at this time')
       })

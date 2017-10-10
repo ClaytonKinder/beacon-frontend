@@ -137,8 +137,6 @@ export default {
     }
   },
   mounted () {
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;'
-    console.log(document.cookie)
     if (this.$route.params && this.$route.params.resetPasswordToken) {
       let resetPasswordToken = {
         resetPasswordToken: this.$route.params.resetPasswordToken
