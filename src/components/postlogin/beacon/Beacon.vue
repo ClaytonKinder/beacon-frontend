@@ -435,6 +435,64 @@ export default {
         .catch((error) => {
           this.createToast('negative', error.body.message)
         })
+    },
+    getCurrentLocation () {
+      return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (response) => {
+              resolve({
+                body: {
+                  accuracy: response.coords.accuracy,
+                  location: {
+                    lat: response.coords.latitude,
+                    lng: response.coords.longitude
+                  }
+                }
+              })
+            },
+            (error) => {
+              let message = ''
+              if (error.code === 1) {
+                message = 'It is HIGHLY recommended to allow your browser to access geolocation. If you choose not to allow access, your location will be far less accurate. Access to geolocation can be changed at any time in your browser settings.'
+              }
+              else {
+                message = 'We were unable to get your location through geolocation. Your location will be less accurate because of this.'
+              }
+              Dialog.create({
+                title: 'Warning',
+                message: message,
+                buttons: [
+                  {
+                    label: 'Confirm',
+                    handler () {
+                      LocationService.getCurrentPosition()
+                        .then((response) => {
+                          resolve(response)
+                        })
+                        .catch((error) => {
+                          reject(error)
+                        })
+                    }
+                  }
+                ]
+              })
+            },
+            {
+              enableHighAccuracy: true
+            }
+          )
+        }
+        else {
+          LocationService.getCurrentPosition()
+            .then((response) => {
+              resolve(response)
+            })
+            .catch((error) => {
+              reject(error)
+            })
+        }
+      })
     }
   },
   mounted () {
@@ -442,7 +500,7 @@ export default {
       this.formData = this.$store.state.user.beacon
       this.formData.beaconLit = true
     }
-    LocationService.getCurrentPosition().then((response) => {
+    this.getCurrentLocation().then((response) => {
       this.formData.location.coordinates[0] = response.body.location.lng
       this.formData.location.coordinates[1] = response.body.location.lat
     }).catch(function (error) {
