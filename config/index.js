@@ -18,14 +18,7 @@ module.exports = {
   defaultTheme: 'mat',
 
   build: {
-    env: {
-      NODE_ENV: `'${process.env.NODE_ENV}'`,
-      MAPS_API_KEY: `'${process.env.MAPS_API_KEY}'`,
-      GEOLOCATION_API_KEY: `'${process.env.GEOLOCATION_API_KEY}'`,
-      SITE_URL: `'${process.env.SITE_URL}'`,
-      SERVER_URL: `'${process.env.SERVER_URL}'`,
-      API_URL: `'${process.env.API_URL}'`
-    },
+    env: require('./prod.env'),
     publicPath: '',
     productionSourceMap: false,
 
@@ -34,7 +27,7 @@ module.exports = {
     purifyCSS: true
   },
   dev: {
-    env: require('./env'),
+    env: require('./dev.env'),
     cssSourceMap: true,
     // auto open browser or not
     openBrowser: true,

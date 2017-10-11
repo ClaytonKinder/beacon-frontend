@@ -4,4 +4,5 @@ node_modules/
 npm-debug.log*
 cordova/platforms
 cordova/plugins
-variables.env
+variables-dev.env
+variables-prod.env
