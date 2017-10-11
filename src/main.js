@@ -28,10 +28,18 @@ Vue.use(VueResource)
 Vue.use(VueCookie)
 Vue.use(VueGoogleMaps, {
   load: {
-    key: process.env.MAPS_API_KRY,
+    key: process.env.MAPS_API_KEY,
     libraries: 'places'
   }
 })
+
+console.log('MAIN.JS')
+console.log(process.env.NODE_ENV)
+console.log(process.env.MAPS_API_KEY)
+console.log(process.env.GEOLOCATION_API_KEY)
+console.log(process.env.SITE_URL)
+console.log(process.env.SERVER_URL)
+console.log(process.env.API_URL)
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {

@@ -18,7 +18,7 @@ module.exports = {
   defaultTheme: 'mat',
 
   build: {
-    env: require('./prod.env'),
+    env: require('./env'),
     publicPath: '',
     productionSourceMap: false,
 
@@ -27,7 +27,7 @@ module.exports = {
     purifyCSS: true
   },
   dev: {
-    env: require('./dev.env'),
+    env: require('./env'),
     cssSourceMap: true,
     // auto open browser or not
     openBrowser: true,
