@@ -5,11 +5,12 @@
   "description": "Explore the world around you",
   "author": "Clayton Kinder <ClaytonAlanKinder@gmail.com>",
   "scripts": {
-    "start": "quasar build mat && quasar serve dist",
+    "start": "node server.js",
     "clean": "node build/script.clean.js",
     "dev": "node build/script.dev.js",
     "build": "node build/script.build.js",
-    "lint": "eslint --ext .js,.vue src"
+    "lint": "eslint --ext .js,.vue src",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "axios": "^0.16.2",
