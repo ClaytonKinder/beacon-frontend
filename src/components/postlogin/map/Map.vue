@@ -1,14 +1,5 @@
 <template>
   <div class="relative-position">
-    <div>
-      <pre>
-        {{currentPosition}}
-      </pre>
-      <br/>
-      <pre>
-        {{navigatorPosition}}
-      </pre>
-    </div>
     <q-window-resize-observable @resize="updateMapHeight" />
     <gmap-map
       ref="beaconMap"
@@ -160,7 +151,8 @@ import {
   QTab,
   QInnerLoading,
   QSpinnerGears,
-  QCarousel
+  QCarousel,
+  Dialog
 } from 'quasar'
 import BeaconService from 'services/beaconService'
 import Toast from 'mixins/Toast.js'
@@ -218,7 +210,6 @@ export default {
         lng: null,
         lat: null
       },
-      navigatorPosition: null,
       controlOptions: {
         zoomControl: false,
         streetViewControl: false,
@@ -556,69 +547,129 @@ export default {
       }
       return new google.maps.Size(w * multiplier, h * multiplier)
     },
+    getCurrentLocation () {
+      return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (response) => {
+              resolve({
+                body: {
+                  accuracy: response.coords.accuracy,
+                  location: {
+                    lat: response.coords.latitude,
+                    lng: response.coords.longitude
+                  }
+                }
+              })
+            },
+            (error) => {
+              let message = ''
+              if (error.code === 1) {
+                message = 'It is HIGHLY recommended to allow your browser to access geolocation. If you choose not to allow access, your location will be far less accurate. Access to geolocation can be changed at any time in your browser settings.'
+              }
+              else {
+                message = 'We were unable to get your location through geolocation. Your location will be less accurate because of this.'
+              }
+              Dialog.create({
+                title: 'Warning',
+                message: message,
+                buttons: [
+                  {
+                    label: 'Confirm',
+                    handler () {
+                      LocationService.getCurrentPosition()
+                        .then((response) => {
+                          resolve(response)
+                        })
+                        .catch((error) => {
+                          reject(error)
+                        })
+                    }
+                  }
+                ]
+              })
+            },
+            {
+              enableHighAccuracy: true
+            }
+          )
+        }
+        else {
+          LocationService.getCurrentPosition()
+            .then((response) => {
+              resolve(response)
+            })
+            .catch((error) => {
+              reject(error)
+            })
+        }
+      })
+    },
     loadMap (vue, centerAfterwards = true) {
       let vm = this || vue
       vm.loading = true
-      LocationService.getCurrentPosition().then(function (response) {
-        vm.setMapCenter(response.body.location.lng, response.body.location.lat)
-        vm.currentPosition.lng = vm.mapOptions.lng
-        vm.currentPosition.lat = vm.mapOptions.lat
-        BeaconService.getNearbyBeacons(vm.mapOptions).then(response => {
-          let bounds = new google.maps.LatLngBounds()
-          if (response.body.length) {
-            response.body.map(marker => {
-              let position = {
-                lng: marker.location.coordinates[0],
-                lat: marker.location.coordinates[1]
-              }
-              let protocol = (process.env.NODE_ENV === 'development') ? 'http' : 'https'
-              let icon = {
-                url: protocol + '://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''),
-                scaledSize: vm.generateMarkerSize(marker.connections.length),
-                origin: new google.maps.Point(0, 0),
-                anchor: new google.maps.Point(10, 34)
-              }
-              marker.icon = icon
-              marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.3 : 1
-              marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 1
-              marker.title = (marker.author._id === vm.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
-              bounds.extend(position)
-              marker.position = position
-            })
-            vm.markers = response.body
-          }
-          else {
-            vm.createToast('negative', 'There are no beacons around you at this time')
-            bounds.extend(vm.currentPosition)
-          }
-          if (centerAfterwards) {
-            vm.$refs.beaconMap.fitBounds(bounds)
-          }
-          if (!vm.doesObjectExist(vm.$store.state.user.beacon) && !vm.doesObjectExist(vm.$store.state.user.connectedTo)) {
-            let mapMarker = (vm.$store.state.user.gender === 'female') ? 'femaleMapMarker' : 'maleMapMarker'
-            if (!vm.markers) {
-              vm.markers = []
+      this.getCurrentLocation()
+        .then((response) => {
+          vm.setMapCenter(response.body.location.lng, response.body.location.lat)
+          vm.currentPosition.lng = vm.mapOptions.lng
+          vm.currentPosition.lat = vm.mapOptions.lat
+          BeaconService.getNearbyBeacons(vm.mapOptions).then(response => {
+            let bounds = new google.maps.LatLngBounds()
+            if (response.body.length) {
+              response.body.map(marker => {
+                let position = {
+                  lng: marker.location.coordinates[0],
+                  lat: marker.location.coordinates[1]
+                }
+                let protocol = (process.env.NODE_ENV === 'development') ? 'http' : 'https'
+                let icon = {
+                  url: protocol + '://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''),
+                  scaledSize: vm.generateMarkerSize(marker.connections.length),
+                  origin: new google.maps.Point(0, 0),
+                  anchor: new google.maps.Point(10, 34)
+                }
+                marker.icon = icon
+                marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.3 : 1
+                marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 1
+                marker.title = (marker.author._id === vm.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
+                bounds.extend(position)
+                marker.position = position
+              })
+              vm.markers = response.body
             }
-            vm.markers.push({
-              position: {
-                lng: vm.mapOptions.lng,
-                lat: vm.mapOptions.lat
-              },
-              icon: `${process.env.SITE_URL}/assets/images/${mapMarker}.png`,
-              opacity: 1,
-              zIndex: 10,
-              title: 'You'
-            })
-          }
-          vm.loading = false
-        }).catch(() => {
-          vm.loading = false
-          vm.createToast('negative', 'Could not populate map at this time')
+            else {
+              vm.createToast('negative', 'There are no beacons around you at this time')
+              bounds.extend(vm.currentPosition)
+            }
+            if (centerAfterwards) {
+              vm.$refs.beaconMap.fitBounds(bounds)
+            }
+            if (!vm.doesObjectExist(vm.$store.state.user.beacon) && !vm.doesObjectExist(vm.$store.state.user.connectedTo)) {
+              let mapMarker = (vm.$store.state.user.gender === 'female') ? 'femaleMapMarker' : 'maleMapMarker'
+              if (!vm.markers) {
+                vm.markers = []
+              }
+              vm.markers.push({
+                position: {
+                  lng: vm.mapOptions.lng,
+                  lat: vm.mapOptions.lat
+                },
+                icon: `${process.env.SITE_URL}/assets/images/${mapMarker}.png`,
+                opacity: 0.5,
+                zIndex: 10,
+                title: 'You'
+              })
+            }
+            vm.loading = false
+          }).catch(() => {
+            vm.loading = false
+            vm.createToast('negative', 'Could not populate map at this time')
+          })
         })
-      }).catch(() => {
-        vm.loading = false
-        this.createToast('negative', 'Could not populate map at this time')
-      })
+        .catch(() => {
+          vm.loading = false
+          this.createToast('negative', 'Could not populate map at this time')
+        })
     }
   },
   mounted () {
@@ -627,23 +678,6 @@ export default {
         setTimeout(this.$refs.beaconMap.resizePreserveCenter, animationLength)
       }
     })
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          console.log(position)
-          this.navigatorPosition = {
-            lng: position.coords.longitude,
-            lat: position.coords.latitude
-          }
-        },
-        (error) => {
-          console.log(error)
-        },
-        {
-          enableHighAccuracy: true
-        }
-      )
-    }
     this.loadMap(this)
   }
 }

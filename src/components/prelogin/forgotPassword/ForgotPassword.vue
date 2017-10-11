@@ -80,7 +80,7 @@ export default {
     return {
       loading: false,
       formData: {
-        email: 'ClaytonAlanKinder@gmail.com'
+        email: ''
       }
     }
   },
