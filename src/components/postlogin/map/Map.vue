@@ -630,7 +630,7 @@ export default {
                 }
                 marker.icon = icon
                 marker.opacity = (marker.author._id === vm.$store.state.user._id) ? 0.3 : 1
-                marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 1
+                marker.zIndex = (marker.author._id === vm.$store.state.user._id) ? 10 : 2
                 marker.title = (marker.author._id === vm.$store.state.user._id) ? 'Your beacon' : marker.author.firstName
                 bounds.extend(position)
                 marker.position = position
@@ -656,7 +656,7 @@ export default {
                 },
                 icon: `${process.env.SITE_URL}/assets/images/${mapMarker}.png`,
                 opacity: 0.5,
-                zIndex: 10,
+                zIndex: 1,
                 title: 'You'
               })
             }
