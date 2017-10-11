@@ -655,7 +655,7 @@ export default {
                   lat: vm.mapOptions.lat
                 },
                 icon: `${process.env.SITE_URL}/assets/images/${mapMarker}.png`,
-                opacity: 0.5,
+                opacity: 1,
                 zIndex: 1,
                 title: 'You'
               })
