@@ -1,5 +1,14 @@
 <template>
   <div class="relative-position">
+    <div>
+      <pre>
+        {{currentPosition}}
+      </pre>
+      <br/>
+      <pre>
+        {{navigatorPosition}}
+      </pre>
+    </div>
     <q-window-resize-observable @resize="updateMapHeight" />
     <gmap-map
       ref="beaconMap"
@@ -209,6 +218,7 @@ export default {
         lng: null,
         lat: null
       },
+      navigatorPosition: null,
       controlOptions: {
         zoomControl: false,
         streetViewControl: false,
@@ -561,8 +571,9 @@ export default {
                 lng: marker.location.coordinates[0],
                 lat: marker.location.coordinates[1]
               }
+              let protocol = (process.env.NODE_ENV === 'development') ? 'http' : 'https'
               let icon = {
-                url: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''),
+                url: protocol + '://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|' + marker.color.replace(/^#/, ''),
                 scaledSize: vm.generateMarkerSize(marker.connections.length),
                 origin: new google.maps.Point(0, 0),
                 anchor: new google.maps.Point(10, 34)
@@ -616,6 +627,11 @@ export default {
         setTimeout(this.$refs.beaconMap.resizePreserveCenter, animationLength)
       }
     })
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        this.navigatorPosition = position.coords
+      })
+    }
     this.loadMap(this)
   }
 }

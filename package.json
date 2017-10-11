@@ -10,7 +10,7 @@
     "dev": "node build/script.dev.js",
     "build": "node build/script.build.js",
     "lint": "eslint --ext .js,.vue src",
-    "deploy": "npm run build && git commit -am 'Build' && git push"
+    "deploy": "npm run build && git add . && git commit -am 'Build' && git push"
   },
   "dependencies": {
     "axios": "^0.16.2",
