@@ -577,6 +577,7 @@ export default {
             vm.markers = response.body
           }
           else {
+            this.createToast('negative', 'There are no beacons around you at this time')
             bounds.extend(vm.currentPosition)
           }
           if (centerAfterwards) {
@@ -584,6 +585,9 @@ export default {
           }
           if (!vm.doesObjectExist(vm.$store.state.user.beacon) && !vm.doesObjectExist(vm.$store.state.user.connectedTo)) {
             let mapMarker = (vm.$store.state.user.gender === 'female') ? 'femaleMapMarker' : 'maleMapMarker'
+            if (!vm.markers) {
+              vm.markers = []
+            }
             vm.markers.push({
               position: {
                 lng: vm.mapOptions.lng,
