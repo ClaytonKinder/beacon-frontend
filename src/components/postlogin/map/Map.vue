@@ -577,7 +577,7 @@ export default {
             vm.markers = response.body
           }
           else {
-            this.createToast('negative', 'There are no beacons around you at this time')
+            vm.createToast('negative', 'There are no beacons around you at this time')
             bounds.extend(vm.currentPosition)
           }
           if (centerAfterwards) {
@@ -600,8 +600,7 @@ export default {
             })
           }
           vm.loading = false
-        }).catch((error) => {
-          console.log(error)
+        }).catch(() => {
           vm.loading = false
           vm.createToast('negative', 'Could not populate map at this time')
         })
