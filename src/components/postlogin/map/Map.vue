@@ -628,9 +628,18 @@ export default {
       }
     })
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        this.navigatorPosition = position.coords
-      })
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log(position)
+          this.navigatorPosition = position.coords
+        },
+        (error) => {
+          console.log(error)
+        },
+        {
+          enableHighAccuracy: true
+        }
+      )
     }
     this.loadMap(this)
   }
