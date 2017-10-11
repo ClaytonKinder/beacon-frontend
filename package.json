@@ -5,7 +5,7 @@
   "description": "Explore the world around you",
   "author": "Clayton Kinder <ClaytonAlanKinder@gmail.com>",
   "scripts": {
-    "start": "quasar build mat || quasar serve dist",
+    "start": "quasar build mat && quasar serve dist",
     "clean": "node build/script.clean.js",
     "dev": "node build/script.dev.js",
     "build": "node build/script.build.js",
