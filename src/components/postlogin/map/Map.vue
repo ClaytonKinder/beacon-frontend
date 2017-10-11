@@ -600,13 +600,14 @@ export default {
             })
           }
           vm.loading = false
-        }).catch(() => {
+        }).catch((error) => {
+          console.log(error)
           vm.loading = false
-          vm.createToast('negative', 'Could not generate map at this time')
+          vm.createToast('negative', 'Could not populate map at this time')
         })
       }).catch(() => {
         vm.loading = false
-        this.createToast('negative', 'Could not generate map at this time')
+        this.createToast('negative', 'Could not populate map at this time')
       })
     }
   },
