@@ -1,4 +1,5 @@
 process.env.NODE_ENV = 'development'
+require('dotenv').config({ path: 'variables-dev.env' });
 
 require('colors')
 

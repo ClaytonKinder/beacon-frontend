@@ -1,4 +1,5 @@
 require('dotenv').config({ path: 'variables-prod.env' });
+console.log(2);
 module.exports = {
   NODE_ENV: `'${process.env.NODE_ENV}'`,
   MAPS_API_KEY: `'${process.env.MAPS_API_KEY}'`,

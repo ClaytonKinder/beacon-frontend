@@ -649,16 +649,20 @@ export default {
               if (!vm.markers) {
                 vm.markers = []
               }
-              vm.markers.push({
-                position: {
-                  lng: vm.mapOptions.lng,
-                  lat: vm.mapOptions.lat
-                },
-                icon: `${process.env.SITE_URL}/assets/images/${mapMarker}.png`,
-                opacity: 1,
-                zIndex: 1,
-                title: 'You'
-              })
+              if (!vm.markers.some((marker) => {
+                return marker.icon === `${process.env.SITE_URL}/assets/images/${mapMarker}.png`
+              })) {
+                vm.markers.push({
+                  position: {
+                    lng: vm.mapOptions.lng,
+                    lat: vm.mapOptions.lat
+                  },
+                  icon: `${process.env.SITE_URL}/assets/images/${mapMarker}.png`,
+                  opacity: 1,
+                  zIndex: 1,
+                  title: 'You'
+                })
+              }
             }
             vm.loading = false
           }).catch(() => {
