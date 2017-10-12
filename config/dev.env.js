@@ -1,7 +1,6 @@
 var merge = require('webpack-merge')
 var prodEnv = require('./prod.env')
 require('dotenv').config({ path: 'variables-dev.env' });
-console.log(1);
 
 module.exports = merge(prodEnv, {
   NODE_ENV: `'${process.env.NODE_ENV}'`,
