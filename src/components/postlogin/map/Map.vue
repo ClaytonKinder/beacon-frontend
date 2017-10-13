@@ -42,21 +42,27 @@
             </div>
           </div>
         </q-toolbar>
+        <div v-if="connectionErrors.length">
+          <div class="info-block negative" v-for="error, key in connectionErrors" :key="key">
+            <q-icon name="fa-exclamation-circle"></q-icon>
+            <div color="negative">{{error}}</div>
+          </div>
+        </div>
         <h6 class="text-center beacon-name">{{selectedBeacon.name}}</h6>
         <div class="modal-body">
           <div>
             <p>{{selectedBeacon.description}}</p>
           </div>
+          <blockquote
+            :class="getBeaconThemeColor(selectedBeacon)"
+            v-if="selectedBeacon.address"
+          >
+            <small class="no-dash">{{selectedBeacon.address}}</small>
+          </blockquote>
           <div class="beacon-tags">
             <q-chip class="beacon-tag on-left" :color="getBeaconThemeColor(selectedBeacon)" small v-for="tag in selectedBeacon.additionalSettings.tags" :key="tag">
               {{tag}}
             </q-chip>
-          </div>
-          <div v-if="connectionErrors.length">
-            <div class="info-block negative" v-for="error, key in connectionErrors" :key="key">
-              <q-icon name="fa-exclamation-circle"></q-icon>
-              <div color="negative">{{error}}</div>
-            </div>
           </div>
           <div>
             <div v-if="chunkedConnections.length < 2">
@@ -349,7 +355,7 @@ export default {
     checkConnectionErrors (beacon, distance) {
       this.connectionErrors = []
       if (!distance.canConnect) {
-        this.connectionErrors.push('You are not close enough to connect')
+        this.connectionErrors.push('You must be within 250m to connect')
       }
     },
     setMapCenter (lng, lat) {
@@ -384,7 +390,7 @@ export default {
       if (this.$refs.connectionCarousel) {
         this.$refs.connectionCarousel.goToSlide(0)
       }
-      LocationService.getBeaconDistance(LocationService.createBeaconDistanceObject(beacon, this.currentPosition))
+      LocationService.getDistanceBetweenCoordinates(LocationService.createBeaconDistanceObject(beacon, this.currentPosition))
         .then((response) => {
           this.modalLoading = false
           this.distanceInfo = response.body
@@ -547,7 +553,7 @@ export default {
       }
       return new google.maps.Size(w * multiplier, h * multiplier)
     },
-    getCurrentLocation () {
+    getCurrentLocation (vm) {
       return new Promise((resolve, reject) => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -563,31 +569,43 @@ export default {
               })
             },
             (error) => {
-              let message = ''
-              if (error.code === 1) {
-                message = 'It is HIGHLY recommended to allow your browser to access geolocation. If you choose not to allow access, your location will be far less accurate. Access to geolocation can be changed at any time in your browser settings.'
+              if (!vm.$cookie.get('has-seen-geolocation-alert')) {
+                let message = ''
+                if (error.code === 1) {
+                  message = 'It is HIGHLY recommended to allow your browser to access geolocation. If you choose not to allow access, your location will be far less accurate. Access to geolocation can be changed at any time in your browser settings.'
+                }
+                else {
+                  message = 'We were unable to get your location through geolocation. Your location will be less accurate because of this.'
+                }
+                Dialog.create({
+                  title: 'Warning',
+                  message: message,
+                  buttons: [
+                    {
+                      label: 'Confirm',
+                      handler () {
+                        LocationService.getCurrentPosition()
+                          .then((response) => {
+                            vm.$cookie.set('has-seen-geolocation-alert', true)
+                            resolve(response)
+                          })
+                          .catch((error) => {
+                            reject(error)
+                          })
+                      }
+                    }
+                  ]
+                })
               }
               else {
-                message = 'We were unable to get your location through geolocation. Your location will be less accurate because of this.'
+                LocationService.getCurrentPosition()
+                  .then((response) => {
+                    resolve(response)
+                  })
+                  .catch((error) => {
+                    reject(error)
+                  })
               }
-              Dialog.create({
-                title: 'Warning',
-                message: message,
-                buttons: [
-                  {
-                    label: 'Confirm',
-                    handler () {
-                      LocationService.getCurrentPosition()
-                        .then((response) => {
-                          resolve(response)
-                        })
-                        .catch((error) => {
-                          reject(error)
-                        })
-                    }
-                  }
-                ]
-              })
             },
             {
               enableHighAccuracy: true
@@ -608,8 +626,9 @@ export default {
     loadMap (vue, centerAfterwards = true) {
       let vm = this || vue
       vm.loading = true
-      this.getCurrentLocation()
+      this.getCurrentLocation(vm)
         .then((response) => {
+          vm.markers = []
           vm.setMapCenter(response.body.location.lng, response.body.location.lat)
           vm.currentPosition.lng = vm.mapOptions.lng
           vm.currentPosition.lat = vm.mapOptions.lat
@@ -638,7 +657,6 @@ export default {
               vm.markers = response.body
             }
             else {
-              vm.createToast('negative', 'There are no beacons around you at this time')
               bounds.extend(vm.currentPosition)
             }
             if (centerAfterwards) {
@@ -652,7 +670,7 @@ export default {
               if (!vm.markers.some((marker) => {
                 return marker.icon === `${process.env.SITE_URL}/assets/images/${mapMarker}.png`
               })) {
-                vm.markers.push({
+                vm.markers.unshift({
                   position: {
                     lng: vm.mapOptions.lng,
                     lat: vm.mapOptions.lat
@@ -665,12 +683,14 @@ export default {
               }
             }
             vm.loading = false
-          }).catch(() => {
+          }).catch((error) => {
+            console.log(error)
             vm.loading = false
             vm.createToast('negative', 'Could not populate map at this time')
           })
         })
-        .catch(() => {
+        .catch((error) => {
+          console.log(error)
           vm.loading = false
           this.createToast('negative', 'Could not populate map at this time')
         })

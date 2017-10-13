@@ -16,10 +16,6 @@
         <q-item-side icon="account circle" />
         <q-item-main label="Account" />
       </q-side-link>
-      <!-- <q-side-link item to="connection-inbox">
-        <q-item-side icon="mail" />
-        <q-item-main :label="'Inbox' + countIncomingRequests()" />
-      </q-side-link> -->
       <q-item @click="logout()">
         <q-item-side icon="exit to app" />
         <q-item-main label="Logout" />

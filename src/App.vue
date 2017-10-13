@@ -37,6 +37,11 @@ export default {}
   .modal.footer-no-shadow
     .layout-footer
       box-shadow none
+  blockquote
+    &.secondary
+      border-color $secondary
+    small.no-dash:before
+      content ''
   .info-block
     padding 0.5rem 0.25rem
     display flex

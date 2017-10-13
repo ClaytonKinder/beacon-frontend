@@ -7,6 +7,14 @@
         </q-card-title>
         <form class="relative-position" name="beaconForm" @submit.prevent="updateUserSettings">
           <q-field
+            label="Play sound when receiving a connection request"
+            :labelWidth="11"
+          >
+          <q-toggle
+            v-model="formData.playNotificationSound"
+          />
+          </q-field>
+          <q-field
             label="Play sound when lighting a beacon"
             :labelWidth="11"
           >
@@ -15,11 +23,11 @@
           />
           </q-field>
           <q-field
-            label="Play sound when receiving a connection request"
+            label="Show your beacon's address to others"
             :labelWidth="11"
           >
           <q-toggle
-            v-model="formData.playNotificationSound"
+            v-model="formData.showBeaconAddress"
           />
           </q-field>
           <q-field
@@ -30,13 +38,13 @@
           <q-radio v-model="formData.unitOfMeasurement" val="miles" label="Miles" /><br/>
           <q-radio v-model="formData.unitOfMeasurement" val="kilometers" label="Kilometers" />
           <q-field
-            label="Search radius"
+            :label="generateSearchRadiusLabel()"
             :labelWidth="11"
           >
           </q-field>
           <q-slider v-model="formData.searchRadius" :min="1" :max="30" :label="true" />
           <q-field
-            label="Nearby beacon limit"
+            :label="'Nearby beacon limit (' + formData.beaconLimit + ')'"
             :labelWidth="11"
           >
           </q-field>
@@ -106,6 +114,7 @@ export default {
         defaultColor: '#FF0000',
         playBeaconSound: false,
         playNotificationSound: true,
+        showBeaconAddress: false,
         unitOfMeasurement: 'miles',
         searchRadius: 15
       },
@@ -134,6 +143,9 @@ export default {
     },
     areObjectsEqual (obj1, obj2) {
       return JSON.stringify(obj1) === JSON.stringify(obj2)
+    },
+    generateSearchRadiusLabel () {
+      return `Search Radius (${this.formData.searchRadius}${(this.formData.unitOfMeasurement === 'miles') ? 'mi' : 'km'})`
     }
   },
   mounted () {

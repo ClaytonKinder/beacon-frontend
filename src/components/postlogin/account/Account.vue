@@ -131,6 +131,13 @@
               <a href="https://www.gravatar.com" target="_blank">Click here to set up a Gravatar account.</a>
             </p>
           </q-collapsible>
+          <q-collapsible group="account" icon="ion-android-cancel" label="Delete account">
+            <div class="text-center">
+              <q-btn color="negative" @click.prevent="openDeleteAccountDialog">
+                Delete account
+              </q-btn>
+            </div>
+          </q-collapsible>
         </q-list>
         <q-inner-loading :visible="loading">
           <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
@@ -152,18 +159,20 @@ import {
   QList,
   QCollapsible,
   QInnerLoading,
-  QSpinnerGears
+  QSpinnerGears,
+  Dialog
 } from 'quasar'
 import { required, email, sameAs, maxLength, minLength } from 'vuelidate/lib/validators'
 import AuthService from 'services/authService.js'
 import UserService from 'services/userService.js'
 import Toast from 'mixins/Toast.js'
+import Helper from 'mixins/Helper.js'
 
 const touchMap = new WeakMap()
 
 export default {
   name: 'account',
-  mixins: [Toast],
+  mixins: [Toast, Helper],
   components: {
     QBtn,
     QCard,
@@ -337,8 +346,38 @@ export default {
       }
       touchMap.set($v, setTimeout($v.$touch, 250))
     },
-    areObjectsEqual (obj1, obj2) {
-      return JSON.stringify(obj1) === JSON.stringify(obj2)
+    openDeleteAccountDialog () {
+      Dialog.create({
+        title: 'Are you sure you want to delete your account?',
+        message: 'This can never be undone and all of your data will be permanently deleted.',
+        buttons: [
+          'Cancel',
+          {
+            label: 'Delete account',
+            color: 'negative',
+            handler: () => {
+              this.loading = true
+              AuthService.deleteAccount({userId: this.$store.state.user._id})
+                .then((response) => {
+                  console.log(response)
+                  this.loading = false
+                  if (response.body.extinguishSocketObj) {
+                    this.$socket.emit('extinguishBeacon', response.body.extinguishSocketObj)
+                  }
+                  if (response.body.denySocketObj) {
+                    this.$socket.emit('denyConnectionRequest', response.body.denySocketObj)
+                  }
+                  this.$cookie.delete('token')
+                  this.$router.push('/')
+                })
+                .catch(() => {
+                  this.loading = false
+                  this.createToast('negative', 'Unable to delete your account at this time')
+                })
+            }
+          }
+        ]
+      })
     }
   },
   mounted () {

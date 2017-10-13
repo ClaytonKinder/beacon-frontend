@@ -15,5 +15,8 @@ export default {
   },
   updateUserPassword (data) {
     return Vue.http.post('user/updateuserpassword', data)
+  },
+  completeTutorialTour (data) {
+    return Vue.http.post('user/completetutorialtour', data)
   }
 }

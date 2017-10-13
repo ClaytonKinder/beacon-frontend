@@ -10,6 +10,9 @@ export default {
   register (data) {
     return Vue.http.post('auth/register', data)
   },
+  deleteAccount (data) {
+    return Vue.http.post('auth/deleteaccount', data)
+  },
   checkIfEmailIsUnique (email) {
     return Vue.http.post(`auth/checkifemailisunique/${email}`)
   },

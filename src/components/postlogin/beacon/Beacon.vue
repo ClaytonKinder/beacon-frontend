@@ -36,6 +36,22 @@
             />
           </q-field>
           <q-field
+            :error="$v.formData.address.$dirty && $v.formData.address.$invalid"
+            error-label="Please enter an address for your beacon"
+          >
+            <q-input
+              type="text"
+              max-length="100"
+              :value="formData.address"
+              :loading="addressLoading"
+              :stack-label="$store.state.user.settings.showBeaconAddress ? 'Address' : 'Address (will not be visible to others)'"
+              disable
+            />
+            <small class="incorrect-address">
+              <a @click.prevent="openIncorrectAddressDialog()">Incorrect address?</a>
+            </small>
+          </q-field>
+          <q-field
             :label="'Color (' + formData.color.toUpperCase() + ')'"
             :labelWidth="11"
           >
@@ -145,13 +161,13 @@
                 :disable="formData.beaconLit"
               />
               <q-field
-                :error="$v.additionalSettings.beaconPassword.$dirty && $v.additionalSettings.beaconPassword.$invalid"
+                :error="$v.additionalSettings.password.$dirty && $v.additionalSettings.password.$invalid"
                 error-label="Password must be at least 8 characters long"
               >
                 <q-input
                   type="password"
-                  v-model.trim="additionalSettings.beaconPassword"
-                  @blur="$v.additionalSettings.beaconPassword.$touch()"
+                  v-model.trim="additionalSettings.password"
+                  @blur="$v.additionalSettings.password.$touch()"
                   float-label="Connection password"
                   :disable="formData.beaconLit"
                 />
@@ -239,12 +255,12 @@ export default {
           type: 'Point',
           coordinates: []
         },
+        address: '',
         author: this.$store.state.user._id,
-        userId: this.$store.state.user._id,
         additionalSettings: null
       },
       additionalSettings: (this.$store.state.user.beacon && this.$store.state.user.beacon.additionalSettings) || {
-        beaconPassword: null,
+        password: null,
         ageRange: {
           min: 18,
           max: 100
@@ -257,7 +273,8 @@ export default {
       page: 1,
       limit: 12,
       minPages: 1,
-      loading: false
+      loading: false,
+      addressLoading: false
     }
   },
   computed: {
@@ -293,10 +310,14 @@ export default {
       description: {
         required,
         maxLength: maxLength(140)
+      },
+      address: {
+        required,
+        maxLength: maxLength(100)
       }
     },
     additionalSettings: {
-      beaconPassword: {
+      password: {
         minLength: minLength(8)
       },
       tags: {
@@ -366,6 +387,7 @@ export default {
     },
     toggleBeacon () {
       this.loading = true
+      this.formData.userId = this.$store.state.user._id
       if (this.formData.beaconLit) {
         if (this.$store.state.user.settings.playBeaconSound || false) {
           document.getElementById('horn').play()
@@ -373,13 +395,15 @@ export default {
         BeaconService.lightBeacon(this.formData)
           .then(response => {
             this.loading = false
+            console.log(response.body.beacon)
             this.$store.commit('updateUser', response.body)
             this.$store.commit('updateBeacon', response.body.beacon)
           })
           .catch(error => {
-            this.beaconLit = !this.beaconLit
+            this.formData.beaconLit = false
             this.loading = false
             this.createToast('negative', error.body.message)
+            console.log(this.$store.state.user, this.formData)
           })
       }
       else {
@@ -403,7 +427,7 @@ export default {
             this.$socket.emit('extinguishBeacon', socketObj)
           })
           .catch(error => {
-            this.beaconLit = !this.beaconLit
+            this.formData.beaconLit = true
             this.loading = false
             this.createToast('negative', error.body.message)
           })
@@ -436,7 +460,28 @@ export default {
           this.createToast('negative', error.body.message)
         })
     },
-    getCurrentLocation () {
+    openIncorrectAddressDialog () {
+      Dialog.create({
+        title: `Incorrect address?`,
+        message: `
+          <div>
+          Try these steps:
+          </div>
+          <ol>
+            <li>
+              Verify that your internet connection is wireless. Wired connections are FAR less accurate. Use Wi-fi or mobile data for best results.
+            </li>
+            <li>
+              After verifying that your internet connection is wireless, make sure that your device has a clear path to either your router or a nearby cell tower. Try to avoid being underground or within thick walls.
+            </li>
+          </ol>
+        `,
+        buttons: [
+          'Close'
+        ]
+      })
+    },
+    getCurrentLocation (vm) {
       return new Promise((resolve, reject) => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -452,31 +497,43 @@ export default {
               })
             },
             (error) => {
-              let message = ''
-              if (error.code === 1) {
-                message = 'It is HIGHLY recommended to allow your browser to access geolocation. If you choose not to allow access, your location will be far less accurate. Access to geolocation can be changed at any time in your browser settings.'
+              if (!vm.$cookie.get('has-seen-geolocation-alert')) {
+                let message = ''
+                if (error.code === 1) {
+                  message = 'It is HIGHLY recommended to allow your browser to access geolocation. If you choose not to allow access, your location will be far less accurate. Access to geolocation can be changed at any time in your browser settings.'
+                }
+                else {
+                  message = 'We were unable to get your location through geolocation. Your location will be less accurate because of this.'
+                }
+                Dialog.create({
+                  title: 'Warning',
+                  message: message,
+                  buttons: [
+                    {
+                      label: 'Confirm',
+                      handler () {
+                        LocationService.getCurrentPosition()
+                          .then((response) => {
+                            vm.$cookie.set('has-seen-geolocation-alert', true)
+                            resolve(response)
+                          })
+                          .catch((error) => {
+                            reject(error)
+                          })
+                      }
+                    }
+                  ]
+                })
               }
               else {
-                message = 'We were unable to get your location through geolocation. Your location will be less accurate because of this.'
+                LocationService.getCurrentPosition()
+                  .then((response) => {
+                    resolve(response)
+                  })
+                  .catch((error) => {
+                    reject(error)
+                  })
               }
-              Dialog.create({
-                title: 'Warning',
-                message: message,
-                buttons: [
-                  {
-                    label: 'Confirm',
-                    handler () {
-                      LocationService.getCurrentPosition()
-                        .then((response) => {
-                          resolve(response)
-                        })
-                        .catch((error) => {
-                          reject(error)
-                        })
-                    }
-                  }
-                ]
-              })
             },
             {
               enableHighAccuracy: true
@@ -496,14 +553,37 @@ export default {
     }
   },
   mounted () {
+    this.loading = true
+    this.addressLoading = true
     if (this.doesObjectExist(this.$store.state.user.beacon)) {
       this.formData = this.$store.state.user.beacon
       this.formData.beaconLit = true
     }
-    this.getCurrentLocation().then((response) => {
+    this.getCurrentLocation(this).then((response) => {
       this.formData.location.coordinates[0] = response.body.location.lng
       this.formData.location.coordinates[1] = response.body.location.lat
+      let geocodingObj = {
+        lat: response.body.location.lat,
+        lng: response.body.location.lng,
+        userId: this.$store.state.user._id
+      }
+      this.loading = false
+      LocationService.getAddressFromCoordinates(geocodingObj)
+        .then((response) => {
+          if (!this.checkExistence(this.$store.state.user, ['beacon', 'address'])) {
+            this.formData.address = response.body
+          }
+          else {
+            this.formData.address = this.$store.state.user.beacon.address
+          }
+          this.addressLoading = false
+        })
+        .catch((error) => {
+          this.createToast('negative', error.body.message)
+          this.addressLoading = false
+        })
     }).catch(function (error) {
+      this.loading = false
       this.createToast('negative', error.body.message)
     })
   }

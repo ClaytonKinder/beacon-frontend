@@ -2,6 +2,9 @@
 
 export default {
   methods: {
+    areObjectsEqual (obj1, obj2) {
+      return JSON.stringify(obj1) === JSON.stringify(obj2)
+    },
     doesObjectExist (obj) {
       if (!obj) return false
       for (var prop in obj) {

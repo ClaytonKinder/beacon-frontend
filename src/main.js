@@ -33,8 +33,6 @@ Vue.use(VueGoogleMaps, {
   }
 })
 
-console.log(process.env)
-
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     authService.isAuth()

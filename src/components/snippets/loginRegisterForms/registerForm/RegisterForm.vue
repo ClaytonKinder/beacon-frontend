@@ -109,12 +109,12 @@ export default {
   data () {
     return {
       formData: {
-        firstName: '',
-        lastName: '',
-        email: '',
-        dateOfBirth: '',
-        password: '',
-        passwordConfirmation: ''
+        firstName: 'Clayton',
+        lastName: 'Kinder',
+        email: 'ClaytonAlanKinder@gmail.com',
+        dateOfBirth: '1993-10-21 00:00:00.000',
+        password: 'clayton123',
+        passwordConfirmation: 'clayton123'
       },
       loading: false
     }
@@ -136,12 +136,6 @@ export default {
       },
       dateOfBirth: {
         required,
-        isInThePast (dateOfBirth) {
-          let date = new Date(dateOfBirth)
-          let now = new Date()
-          now.setHours(0, 0, 0, 0)
-          return (date < now)
-        },
         isOlderThanEighteen (dateOfBirth) {
           let today = new Date()
           let dob = new Date(dateOfBirth)
