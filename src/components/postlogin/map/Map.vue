@@ -683,12 +683,12 @@ export default {
               }
             }
             vm.loading = false
-          }).catch((error) => {
+          }).catch(() => {
             vm.loading = false
             vm.createToast('negative', 'Could not populate map at this time')
           })
         })
-        .catch((error) => {
+        .catch(() => {
           vm.loading = false
           this.createToast('negative', 'Could not populate map at this time')
         })
