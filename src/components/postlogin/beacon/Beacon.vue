@@ -395,7 +395,6 @@ export default {
         BeaconService.lightBeacon(this.formData)
           .then(response => {
             this.loading = false
-            console.log(response.body.beacon)
             this.$store.commit('updateUser', response.body)
             this.$store.commit('updateBeacon', response.body.beacon)
           })
@@ -403,7 +402,6 @@ export default {
             this.formData.beaconLit = false
             this.loading = false
             this.createToast('negative', error.body.message)
-            console.log(this.$store.state.user, this.formData)
           })
       }
       else {

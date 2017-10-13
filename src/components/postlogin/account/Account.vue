@@ -359,7 +359,6 @@ export default {
               this.loading = true
               AuthService.deleteAccount({userId: this.$store.state.user._id})
                 .then((response) => {
-                  console.log(response)
                   this.loading = false
                   if (response.body.extinguishSocketObj) {
                     this.$socket.emit('extinguishBeacon', response.body.extinguishSocketObj)
