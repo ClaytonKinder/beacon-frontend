@@ -18,7 +18,7 @@
       ref="tutorialTourModal"
       noEscDismiss
       noBackdropDismiss
-      :content-css="{maxWidth: '600px'}"
+      :content-css="{maxWidth: tourModalWidth}"
     >
       <q-stepper
         class="tutorial-tour"
@@ -140,8 +140,10 @@ import {
   QStep,
   QStepperNavigation,
   QInnerLoading,
-  QSpinnerGears
+  QSpinnerGears,
+  dom
 } from 'quasar'
+const { viewport } = dom
 import PostloginHeader from 'components/postlogin/header/Header'
 import Sidebar from 'components/postlogin/sidebar/Sidebar'
 import UserService from 'services/userService.js'
@@ -182,7 +184,22 @@ export default {
       tutorialStep: null
     }
   },
-  computed: {},
+  computed: {
+    tourModalWidth () {
+      if (this.$q.platform.is.mobile) {
+        return '100%'
+      }
+      else {
+        let {width} = viewport()
+        if (width <= 600) {
+          return '100%'
+        }
+        else {
+          return '600px'
+        }
+      }
+    }
+  },
   methods: {
     completeTutorialTour () {
       this.tourLoading = true
