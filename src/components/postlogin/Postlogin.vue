@@ -442,7 +442,8 @@ export default {
     left 0
     background white
   .q-stepper.tutorial-tour
-    height 100%
+    &:not(.mobile)
+      height 100%
     .tutorial-step-list
       li:not(last-of-type)
         margin-bottom 1rem
