@@ -109,12 +109,12 @@ export default {
   data () {
     return {
       formData: {
-        firstName: 'Clayton',
-        lastName: 'Kinder',
-        email: 'ClaytonAlanKinder@gmail.com',
-        dateOfBirth: '1993-10-21 00:00:00.000',
-        password: 'clayton123',
-        passwordConfirmation: 'clayton123'
+        firstName: '',
+        lastName: '',
+        email: '',
+        dateOfBirth: '',
+        password: '',
+        passwordConfirmation: ''
       },
       loading: false
     }
