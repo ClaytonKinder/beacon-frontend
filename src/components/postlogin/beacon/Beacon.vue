@@ -48,7 +48,7 @@
               disable
             />
             <small class="incorrect-address">
-              <a @click.prevent="$refs.correctAddressModal.open">Incorrect address?</a>
+              <a v-bind:class="{ disabled: formData.beaconLit }" @click.prevent="$refs.correctAddressModal.open">Incorrect address?</a>
             </small>
           </q-field>
           <q-field

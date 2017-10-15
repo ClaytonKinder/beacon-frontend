@@ -21,6 +21,9 @@ export default {}
     color white
   .modal-inner-loading
     z-index 10000
+  a.disabled
+    pointer-events none
+    cursor not-allowed
   .icon-button
     i.on-left
       margin-right 0
