@@ -48,7 +48,7 @@
               disable
             />
             <small class="incorrect-address">
-              <a @click.prevent="openIncorrectAddressDialog()">Incorrect address?</a>
+              <a @click.prevent="$refs.correctAddressModal.open">Incorrect address?</a>
             </small>
           </q-field>
           <q-field
@@ -65,7 +65,7 @@
             </div>
           </div>
           <div class="additional-settings-wrapper text-center">
-            <a @click.prevent="$refs.additionalSettingsModal.open()">Additional settings</a>
+            <a @click.prevent="$refs.additionalSettingsModal.open">Additional settings</a>
           </div>
           <q-field
             class="text-center toggle-field"
@@ -128,6 +128,55 @@
           <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
         </q-inner-loading>
       </q-card>
+      <q-modal class="footer-no-shadow mobile-modal-padding" ref="correctAddressModal" :content-css="{minWidth: '400px', minHeight: '500px'}">
+        <q-modal-layout class="correctAddressModal">
+          <q-toolbar
+            slot="header"
+          >
+            <div class="q-toolbar-title">
+              Correct Your Address
+            </div>
+          </q-toolbar>
+          <div class="modal-body">
+            <form name="correctAddressForm" class="correctAddressForm">
+              <p>
+                Please enter your corrected address below. To prevent data falsification, your corrected address must be <strong>within 250m</strong> of the original address.
+              </p>
+              <q-field
+                :error="$v.correctAddressData.address.$dirty && $v.correctAddressData.address.$invalid"
+                error-label="Corrected address must be within 250m of original address"
+              >
+                <q-input
+                  ref="correctAddressInput"
+                  type="text"
+                  v-model.trim="correctAddressData.address"
+                  @blur="$v.correctAddressData.address.$touch()"
+                  float-label="Corrected Address"
+                  :disable="formData.beaconLit"
+                >
+                  <q-autocomplete
+                    @search="getAddresses"
+                    :min-characters="3"
+                    @selected="selectAddress"
+                  />
+                </q-input>
+              </q-field>
+              <q-field>
+                <q-checkbox v-model="correctAddressData.saveCorrectedAddress" label="Save this corrected address so it is always used in place of the original address" />
+              </q-field>
+            </form>
+          </div>
+          <q-toolbar color="white" slot="footer">
+            <div class="q-toolbar-title text-right">
+              <q-btn flat color="primary" @click="$refs.correctAddressModal.close()">Close</q-btn>
+              <q-btn color="primary" @click="correctAddress()" :disable="$v.correctAddressData.$invalid || !correctAddressData.canUpdateAddress || formData.beaconLit">Update Settings</q-btn>
+            </div>
+          </q-toolbar>
+          <q-inner-loading :visible="correctAddressModalLoading">
+            <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+          </q-inner-loading>
+        </q-modal-layout>
+      </q-modal>
       <q-modal class="footer-no-shadow additional-settings-modal mobile-modal-padding" ref="additionalSettingsModal" :content-css="{minWidth: '400px', minHeight: '500px'}">
         <q-modal-layout class="additionalSettingsModal">
           <q-toolbar
@@ -211,12 +260,15 @@ import {
   QSpinner,
   QSearch,
   QPagination,
+  QAutocomplete,
+  QCheckbox,
   Dialog
 } from 'quasar'
 import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 import LocationService from 'services/locationService.js'
 import ConnectionService from 'services/connectionService.js'
 import BeaconService from 'services/beaconService.js'
+import UserService from 'services/userService.js'
 import Toast from 'mixins/Toast.js'
 import Helper from 'mixins/Helper.js'
 import ConnectionSquare from 'components/snippets/connectionSquare/ConnectionSquare'
@@ -242,6 +294,8 @@ export default {
     QSpinner,
     QSearch,
     QPagination,
+    QAutocomplete,
+    QCheckbox,
     ConnectionSquare
   },
   data () {
@@ -259,6 +313,13 @@ export default {
         author: this.$store.state.user._id,
         additionalSettings: null
       },
+      correctAddressData: {
+        address: '',
+        lat: 0,
+        lng: 0,
+        canUpdateAddress: false,
+        saveCorrectedAddress: false
+      },
       additionalSettings: (this.$store.state.user.beacon && this.$store.state.user.beacon.additionalSettings) || {
         password: null,
         ageRange: {
@@ -274,7 +335,8 @@ export default {
       limit: 12,
       minPages: 1,
       loading: false,
-      addressLoading: false
+      addressLoading: false,
+      correctAddressModalLoading: false
     }
   },
   computed: {
@@ -324,6 +386,14 @@ export default {
         maxLength: maxLength(5),
         $each: {
           maxLength: maxLength(20)
+        }
+      }
+    },
+    correctAddressData: {
+      address: {
+        maxLength: 150,
+        canUpdateAddress (value) {
+          return this.correctAddressData.canUpdateAddress
         }
       }
     }
@@ -548,6 +618,115 @@ export default {
             })
         }
       })
+    },
+    correctAddress () {
+      if (this.correctAddressData.saveCorrectedAddress) {
+        this.correctAddressModalLoading = true
+        let correctionObj = {
+          addressChange: {
+            original: {
+              address: this.formData.address,
+              lat: this.formData.location.coordinates[1],
+              lng: this.formData.location.coordinates[0]
+            },
+            corrected: {
+              address: this.correctAddressData.address,
+              lat: this.correctAddressData.lat,
+              lng: this.correctAddressData.lng
+            }
+          },
+          userId: this.$store.state.user._id
+        }
+        UserService.addCorrectedAddress(correctionObj)
+          .then((response) => {
+            this.correctAddressModalLoading = false
+            this.resetCorrectionData()
+            this.$refs.correctAddressModal.close()
+          })
+          .catch((error) => {
+            this.correctAddressModalLoading = false
+            this.createToast('negative', error.body.message)
+          })
+      }
+      else {
+        this.resetCorrectionData()
+        this.$refs.correctAddressModal.close()
+      }
+    },
+    getAddresses (address, done) {
+      let autocompleteObj = {
+        userId: this.$store.state.user._id,
+        address: address
+      }
+      LocationService.autocompleteAddress(autocompleteObj)
+        .then((response) => {
+          if (response.body) {
+            done(response.body)
+          }
+          else {
+            this.createToast('negative', 'Could not find the address entered')
+          }
+        })
+        .catch(() => {
+          this.createToast('negative', 'Could not find the address entered')
+        })
+    },
+    selectAddress (address) {
+      this.correctAddressModalLoading = true
+      let addressObj = {
+        userId: this.$store.state.user._id,
+        address: address.value
+      }
+      LocationService.getCoordinatesFromAddress(addressObj)
+        .then((response) => {
+          if (response.body) {
+            let distanceObj = {
+              lat1: response.body.lat,
+              lng1: response.body.lng,
+              lat2: this.formData.location.coordinates[1],
+              lng2: this.formData.location.coordinates[0]
+            }
+            this.correctAddressData.lat = response.body.lat
+            this.correctAddressData.lng = response.body.lng
+            LocationService.getDistanceBetweenCoordinates(distanceObj)
+              .then((response) => {
+                this.correctAddressModalLoading = false
+                if (response.body && response.body.canUpdateAddress) {
+                  this.correctAddressData.canUpdateAddress = true
+                }
+                else {
+                  this.correctAddressData.canUpdateAddress = false
+                }
+              })
+              .catch(() => {
+                this.correctAddressModalLoading = false
+                this.createToast('negative', 'Could not validate address at this time')
+              })
+          }
+          else {
+            this.correctAddressModalLoading = false
+            this.createToast('negative', 'Could not get the coordinates of the address entered')
+          }
+        })
+        .catch((error) => {
+          this.correctAddressModalLoading = false
+          this.createToast('negative', error.body.message)
+        })
+    },
+    resetCorrectionData () {
+      this.formData.location.coordinates = [
+        this.correctAddressData.lng,
+        this.correctAddressData.lat
+      ]
+      this.formData.address = this.correctAddressData.address
+      this.correctAddressData = {
+        address: '',
+        lat: 0,
+        lng: 0,
+        canUpdateAddress: false,
+        saveCorrectedAddress: false
+      }
+      this.$v.correctAddressData.$reset()
     }
   },
   mounted () {
@@ -569,7 +748,21 @@ export default {
       LocationService.getAddressFromCoordinates(geocodingObj)
         .then((response) => {
           if (!this.checkExistence(this.$store.state.user, ['beacon', 'address'])) {
-            this.formData.address = response.body
+            let correctedAddress = false
+            for (var i = 0; i < this.$store.state.user.correctedAddresses.length; i++) {
+              if (this.$store.state.user.correctedAddresses[i].original.address === response.body) {
+                correctedAddress = this.$store.state.user.correctedAddresses[i].corrected
+              }
+            }
+            if (correctedAddress) {
+              this.formData.address = correctedAddress.address
+              this.formData.location.coordinates[0] = correctedAddress.lng
+              this.formData.location.coordinates[1] = correctedAddress.lat
+            }
+            else {
+              this.formData.address = response.body
+            }
+            this.addressLoading = false
           }
           else {
             this.formData.address = this.$store.state.user.beacon.address
@@ -615,4 +808,6 @@ export default {
       overflow-x hidden
     .q-slider
       max-width 98%
+  form.correctAddressForm
+    padding-top 1rem
 </style>

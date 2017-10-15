@@ -18,5 +18,11 @@ export default {
   },
   completeTutorialTour (data) {
     return Vue.http.post('user/completetutorialtour', data)
+  },
+  addCorrectedAddress (data) {
+    return Vue.http.post('user/addcorrectedaddress', data)
+  },
+  deleteCorrectedAddress (data) {
+    return Vue.http.post('user/deletecorrectedaddress', data)
   }
 }

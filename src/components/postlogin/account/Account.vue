@@ -131,6 +131,32 @@
               <a href="https://www.gravatar.com" target="_blank">Click here to set up a Gravatar account.</a>
             </p>
           </q-collapsible>
+          <q-collapsible group="account" icon="import_contacts" label="Corrected addresses">
+            <p class="text-center" v-if="!$store.state.user.correctedAddresses.length">
+              You have no corrected addresses at this time
+            </p>
+            <table class="q-table responsive striped-even" v-if="$store.state.user.correctedAddresses.length">
+              <thead>
+                <tr>
+                  <th>
+                    Original
+                  </th>
+                  <th>
+                    Corrected
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="correction in $store.state.user.correctedAddresses" :key="correction._id">
+                  <td data-th="Original">{{correction.original.address}}</td>
+                  <td data-th="Corrected">{{correction.corrected.address}}</td>
+                  <td>
+                    <q-btn flat class="no-shadow text-center icon-button" color="negative" icon="ion-close-round" @click.prevent="deleteCorrectedAddress(correction)"></q-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </q-collapsible>
           <q-collapsible group="account" icon="ion-android-cancel" label="Delete account">
             <div class="text-center">
               <q-btn color="negative" @click.prevent="openDeleteAccountDialog">
@@ -377,6 +403,26 @@ export default {
           }
         ]
       })
+    },
+    deleteCorrectedAddress (correction) {
+      if (!this.loading) {
+        this.loading = true
+        let correctedObj = {
+          userId: this.$store.state.user._id,
+          correctedAddressId: correction._id
+        }
+        UserService.deleteCorrectedAddress(correctedObj)
+          .then((response) => {
+            this.loading = false
+            if (response.body) {
+              this.$store.commit('updateUser', response.body)
+            }
+          })
+          .catch(() => {
+            this.createToast('negative', 'Could not delete the corrected address at this time')
+            this.loading = false
+          })
+      }
     }
   },
   mounted () {

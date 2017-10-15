@@ -7,6 +7,9 @@ export default {
   getAddressFromCoordinates (data) {
     return Vue.http.post('location/getaddressfromcoordinates', data)
   },
+  getCoordinatesFromAddress (data) {
+    return Vue.http.post('location/getcoordinatesfromaddress', data)
+  },
   getDistanceBetweenCoordinates (data) {
     return Vue.http.post('location/getdistancebetweencoordinates', data)
   },
@@ -17,5 +20,8 @@ export default {
       lat2: beacon.position.lat,
       lng2: beacon.position.lng
     }
+  },
+  autocompleteAddress (data) {
+    return Vue.http.post('location/autocompleteaddress', data)
   }
 }

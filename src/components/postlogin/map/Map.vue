@@ -654,6 +654,7 @@ export default {
                 bounds.extend(position)
                 marker.position = position
               })
+              bounds.extend(vm.currentPosition)
               vm.markers = response.body
             }
             else {

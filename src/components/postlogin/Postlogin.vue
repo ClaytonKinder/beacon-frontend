@@ -455,6 +455,7 @@ export default {
     .q-stepper-nav
       justify-content flex-end
     &.mobile
+      box-shadow none
       .q-stepper-header
         width 100%
       .q-stepper-step
