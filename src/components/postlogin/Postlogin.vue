@@ -155,11 +155,14 @@ export default {
   @import '~variables'
   .postlogin-page-wrapper
     width 500px
-    max-width 90vw  
+    max-width 90vw
   .layout-aside,
   .layout-backdrop
     bottom auto !important
     height 100%
+  body.mobile .layout-aside,
+  body.mobile .layout-backdrop
+    height 100vh
   .stepper-wrapper
     position absolute
     top 0
