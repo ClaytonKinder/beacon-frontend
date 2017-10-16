@@ -1,6 +1,6 @@
 <template>
-  <div class="relative-position">
-    <q-window-resize-observable @resize="updateMapHeight" />
+  <div class="relative-position" style="height: calc(100% - 172px)">
+    <!-- <q-window-resize-observable @resize="updateMapHeight" /> -->
     <gmap-map
       ref="beaconMap"
       class="beaconMap"
@@ -8,8 +8,9 @@
       :zoom="13"
       :options="controlOptions"
       map-type-id="terrain"
-      v-bind:style="{height: mapHeight}"
+      style="height: 100%"
     >
+          <!-- v-bind:style="{height: mapHeight}" -->
       <gmap-marker
         :key="index"
         v-for="(m, index) in markers"
@@ -33,7 +34,7 @@
       >
         <q-toolbar
           slot="header"
-          :style="{background: selectedBeacon.color}"
+          :color="getBeaconThemeColor(selectedBeacon)"
         >
           <div class="q-toolbar-title row justify-start align-center">
             <img class="circular profile on-left" :src="selectedBeacon.author.gravatar" />
@@ -384,23 +385,27 @@ export default {
       return (beacon.additionalSettings.password) ? 'secondary' : 'primary'
     },
     openMapModal (beacon) {
-      this.modalLoading = true
-      this.selectedBeacon = beacon
-      this.modalOpen = true
-      if (this.$refs.connectionCarousel) {
-        this.$refs.connectionCarousel.goToSlide(0)
+      if (!beacon.self) {
+        this.modalLoading = true
+        this.modalOpen = true
+        if (this.$refs.connectionCarousel) {
+          this.$refs.connectionCarousel.goToSlide(0)
+        }
+        let distancePromise = LocationService.getDistanceBetweenCoordinates(LocationService.createBeaconDistanceObject(beacon, this.currentPosition))
+        let beaconPromise = BeaconService.getSingleBeacon({ userId: this.$store.state.user._id, beaconId: beacon._id })
+        Promise.all([distancePromise, beaconPromise])
+          .then((response) => {
+            this.modalLoading = false
+            this.distanceInfo = response[0].body
+            this.selectedBeacon = response[1].body
+            this.checkConnectionErrors(beacon, this.distanceInfo)
+          })
+          .catch((error) => {
+            this.modalLoading = false
+            this.$refs.mapModal.close()
+            this.createToast('negative', error.body.message)
+          })
       }
-      LocationService.getDistanceBetweenCoordinates(LocationService.createBeaconDistanceObject(beacon, this.currentPosition))
-        .then((response) => {
-          this.modalLoading = false
-          this.distanceInfo = response.body
-          this.checkConnectionErrors(beacon, this.distanceInfo)
-        })
-        .catch((error) => {
-          this.modalLoading = false
-          this.$refs.mapModal.close()
-          this.createToast('negative', error.body.message)
-        })
     },
     closeMapModal () {
       this.modalOpen = false
@@ -432,6 +437,7 @@ export default {
                 }
                 this.$socket.emit('createConnectionRequest', socketObj)
                 this.$refs.mapModal.close()
+                this.loadMap(null, false)
               })
               .catch((error) => {
                 this.modalLoading = false
@@ -466,6 +472,7 @@ export default {
                 }
                 this.$socket.emit('createConnectionRequest', socketObj)
                 this.$refs.mapModal.close()
+                this.loadMap(null, false)
               })
               .catch((error) => {
                 this.modalLoading = false
@@ -481,7 +488,6 @@ export default {
         ConnectionService.createConnectionRequest(connectionObj)
           .then((response) => {
             this.modalLoading = false
-            this.$refs.mapModal.close()
             this.$store.commit('updateUser', response.body)
             this.createToast('positive', 'Your connection request has been sent successfully')
             let socketObj = {
@@ -490,6 +496,8 @@ export default {
               fromName: response.body.outgoingConnectionRequest.name
             }
             this.$socket.emit('createConnectionRequest', socketObj)
+            this.$refs.mapModal.close()
+            this.loadMap(null, false)
           })
           .catch((error) => {
             this.modalLoading = false
@@ -510,6 +518,7 @@ export default {
           }
           this.$socket.emit('cancelConnectionRequest', socketObj)
           this.$refs.mapModal.close()
+          this.loadMap(null, false)
         })
         .catch((error) => {
           this.modalLoading = false
@@ -679,7 +688,8 @@ export default {
                   icon: `${process.env.SITE_URL}/assets/images/${mapMarker}.png`,
                   opacity: 1,
                   zIndex: 1,
-                  title: 'You'
+                  title: 'You',
+                  self: true
                 })
               }
             }

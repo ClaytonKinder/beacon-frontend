@@ -2,8 +2,8 @@
   <div class="layout-padding row justify-center">
     <div class="postlogin-page-wrapper">
       <!-- Light/Extinguish beacon card -->
-      <q-card class="beacon-card" color="white" v-if="checkExistence(user, ['outgoingConnectionRequest'], true) && checkExistence(user, ['connectedTo'], true)">
-        <q-card-title class="uppercase beacon-card-title text-center block bg-primary">
+      <q-card class="beacon-card" v-if="checkExistence(user, ['outgoingConnectionRequest'], true) && checkExistence(user, ['connectedTo'], true)">
+        <q-card-title color="white" class="uppercase beacon-card-title text-center block bg-primary">
           {{ formData.beaconLit ? 'Extinguish' : 'Light' }} Beacon
         </q-card-title>
         <form class="relative-position" name="beaconForm" @submit.prevent>
@@ -46,6 +46,7 @@
               :loading="addressLoading"
               :stack-label="$store.state.user.settings.showBeaconAddress ? 'Address' : 'Address (will not be visible to others)'"
               disable
+              readonly
             />
             <small class="incorrect-address">
               <a v-bind:class="{ disabled: formData.beaconLit }" @click.prevent="openCorrectAddressModal">Incorrect address?</a>
@@ -67,12 +68,15 @@
           <q-field
             class="text-center toggle-field"
           >
-            {{formData.beaconLit}}
             <q-toggle
               @change="toggleBeacon"
               :disable="$v.formData.$invalid"
               v-model="formData.beaconLit"
             />
+          </q-field>
+          <q-field class="text-center toggle-field" v-if="formData.beaconLit && doesObjectExist($store.state.user.beacon)">
+            This beacon will expire naturally
+            {{ $store.state.user.beacon.expiration | moment('from', 'now') }}.
           </q-field>
           <q-inner-loading :visible="loading">
             <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
@@ -102,7 +106,10 @@
         <div class="connection-body text-center">
           <div class="connection-text">
             <!-- You are connected to the beacon of {{$store.state.user.connectedTo.ownerName}} -->
-            You are connected to {{generatePossessive($store.state.user.connectedTo.ownerName)}} beacon
+            You are connected to {{generatePossessive($store.state.user.connectedTo.ownerName)}} beacon.
+            <br/>
+            This beacon will expire naturally
+            {{ $store.state.user.connectedTo.beaconExpiration | moment('from', 'now') }}.
           </div>
           <q-btn color="primary" @click.prevent="disconnectFromBeacon($store.state.user.connectedTo)">Disconnect</q-btn>
         </div>
@@ -120,7 +127,7 @@
           <q-pagination v-model="page" :min="minPages" :max="maxPages" />
         </div>
         <div class="text-center no-connections" v-if="checkExistence(user, ['beacon', 'connections'], true)">
-          You have no connections at this time
+          You have no connections at this time.
         </div>
         <q-inner-loading :visible="loading">
           <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
@@ -217,6 +224,7 @@
                   @blur="$v.additionalSettings.password.$touch()"
                   float-label="Connection password"
                   :disable="formData.beaconLit"
+                  :no-pass-toggle="formData.beaconLit"
                 />
               </q-field>
               <q-field
@@ -338,6 +346,8 @@ export default {
         let beacon = JSON.parse(JSON.stringify(this.$store.state.user.beacon))
         beacon.beaconLit = false
         this.beaconCopy = JSON.parse(JSON.stringify(beacon))
+        delete this.beaconCopy.created
+        delete this.beaconCopy.expiration
         beacon.beaconLit = true
         return beacon
       }

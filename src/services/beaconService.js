@@ -10,6 +10,9 @@ export default {
   getNearbyBeacons (data) {
     return Vue.http.post('beacon/getnearbybeacons', data)
   },
+  getSingleBeacon (data) {
+    return Vue.http.post('beacon/getsinglebeacon', data)
+  },
   verifyBeaconPassword (data) {
     return Vue.http.post('beacon/verifybeaconpassword', data)
   }

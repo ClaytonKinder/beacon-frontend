@@ -24,13 +24,14 @@ export default {
       userId: user._id,
       beaconId: beacon._id,
       beaconOwnerId: beacon.author._id,
-      lat: beacon.position.lat,
-      lng: beacon.position.lng,
+      lat: beacon.location.coordinates[1],
+      lng: beacon.location.coordinates[0],
       userLat: userPosition.lat,
       userLng: userPosition.lng,
       ownerName: beacon.author.fullName,
       name: user.fullName,
       gravatar: user.gravatar,
+      beaconExpiration: beacon.expiration,
       user: user
     }
   }
