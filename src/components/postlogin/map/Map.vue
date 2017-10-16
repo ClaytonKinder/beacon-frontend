@@ -1,6 +1,5 @@
 <template>
-  <div class="relative-position" style="height: calc(100% - 172px)">
-    <!-- <q-window-resize-observable @resize="updateMapHeight" /> -->
+  <div class="relative-position map-wrapper">
     <gmap-map
       ref="beaconMap"
       class="beaconMap"
@@ -10,7 +9,6 @@
       map-type-id="terrain"
       style="height: 100%"
     >
-          <!-- v-bind:style="{height: mapHeight}" -->
       <gmap-marker
         :key="index"
         v-for="(m, index) in markers"
@@ -145,7 +143,6 @@
 
 <script>
 import {
-  QWindowResizeObservable,
   QModal,
   QModalLayout,
   QInput,
@@ -177,7 +174,6 @@ export default {
   name: 'map',
   mixins: [Toast, Helper],
   components: {
-    QWindowResizeObservable,
     QModal,
     QModalLayout,
     QInput,
@@ -539,13 +535,6 @@ export default {
       let l = 0.2126 * C[0] + 0.7152 * C[1] + 0.0722 * C[2]
       return (l > 0.179) ? '#0C0C0C' : '#FFF'
     },
-    updateMapHeight () {
-      let windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
-      let headerHeight = 122 // Header height stays consistent
-      let footerHeight = 50 // Footer height stays consistent
-      this.mapHeight = windowHeight - headerHeight - footerHeight + 'px'
-      this.$refs.beaconMap.resizePreserveCenter()
-    },
     generateMarkerSize (c, w = 21, h = 34) {
       let multiplier = 1
       if (c > 0 && c <= 10) {
@@ -717,9 +706,11 @@ export default {
 </script>
 
 <style lang="stylus">
+  .map-wrapper
+    height calc(100vh - 172px)
   .beaconMap
-    width: 100%
-    height: 400px
+    width 100%
+    height 100%
   .map-modal
     .beacon-name
       padding-top 1rem
