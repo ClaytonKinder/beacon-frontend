@@ -54,14 +54,10 @@
             :labelWidth="11"
           >
           </q-field>
-          <div class="colorpicker-block">
-            <div
-              class="colorpicker-wrapper relative-position"
-              v-bind:style="{background: formData.defaultColor + ' !important'}"
-            >
-              <input type="color" v-model="formData.defaultColor" class="full-width colorpicker" />
-            </div>
-          </div>
+          <color-modal
+            field="defaultColor"
+            :color.sync="formData.defaultColor"
+          ></color-modal>
           <div class=" button-wrapper text-right">
             <q-btn color="primary" :disabled="areObjectsEqual(originalData, formData)">
               Update
@@ -91,6 +87,7 @@ import {
 } from 'quasar'
 import UserService from 'services/userService.js'
 import Toast from 'mixins/Toast.js'
+import ColorModal from 'components/snippets/colorModal/ColorModal'
 
 export default {
   name: 'Settings',
@@ -105,13 +102,14 @@ export default {
     QSlider,
     QRadio,
     QInnerLoading,
-    QSpinnerGears
+    QSpinnerGears,
+    ColorModal
   },
   data () {
     return {
       formData: this.$store.state.user.settings || {
         beaconLimit: 55,
-        defaultColor: '#FF0000',
+        defaultColor: '#D50000',
         playBeaconSound: false,
         playNotificationSound: true,
         showBeaconAddress: false,
@@ -146,16 +144,12 @@ export default {
     },
     generateSearchRadiusLabel () {
       return `Search Radius (${this.formData.searchRadius}${(this.formData.unitOfMeasurement === 'miles') ? 'mi' : 'km'})`
+    },
+    setColor (value) {
+      this.formData.defaultColor = value
     }
   },
   mounted () {
-    const vm = this
-    this.$q.events.$on('changeColorSettings', function (color) {
-      vm.formData.defaultColor = color
-    })
-    this.$q.events.$once('changeColorSettings', function (color) {
-      vm.originalData.defaultColor = color
-    })
     this.originalData = JSON.parse(JSON.stringify(this.formData))
   }
 }

@@ -409,31 +409,31 @@ export default {
   .postlogin-page-wrapper
     width 500px
     max-width 90vw
-  .colorpicker-block
-    padding 1px
-    background rgba(0,0,0,0.12)
-    cursor pointer
-    &.disabled
-      opacity: 0.6
-  .colorpicker-wrapper
-    height 40px
-    cursor pointer
-  .colorpicker
-    cursor pointer
-    height 100%
-    position absolute
-    top 0
-    right 0
-    bottom 0
-    left 0
-    padding: 0
-    padding-bottom 0
-    border: 0
-    opacity 0
-    &:disabled
-      opacity 0 !important
-    &:focus
-      outline 0
+  // .colorpicker-block
+  //   padding 1px
+  //   background rgba(0,0,0,0.12)
+  //   cursor pointer
+  //   &.disabled
+  //     opacity: 0.6
+  // .colorpicker-wrapper
+  //   height 40px
+  //   cursor pointer
+  // .colorpicker
+  //   cursor pointer
+  //   height 100%
+  //   position absolute
+  //   top 0
+  //   right 0
+  //   bottom 0
+  //   left 0
+  //   padding: 0
+  //   padding-bottom 0
+  //   border: 0
+  //   opacity 0
+  //   &:disabled
+  //     opacity 0 !important
+  //   &:focus
+  //     outline 0
   .stepper-wrapper
     position absolute
     top 0

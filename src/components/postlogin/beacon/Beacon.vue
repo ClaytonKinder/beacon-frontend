@@ -48,7 +48,7 @@
               disable
             />
             <small class="incorrect-address">
-              <a v-bind:class="{ disabled: formData.beaconLit }" @click.prevent="$refs.correctAddressModal.open">Incorrect address?</a>
+              <a v-bind:class="{ disabled: formData.beaconLit }" @click.prevent="openCorrectAddressModal">Incorrect address?</a>
             </small>
           </q-field>
           <q-field
@@ -56,20 +56,18 @@
             :labelWidth="11"
           >
           </q-field>
-          <div class="colorpicker-block" v-bind:class="{ disabled: formData.beaconLit }">
-            <div
-              class="colorpicker-wrapper relative-position"
-              v-bind:style="{background: formData.color + ' !important'}"
-            >
-              <input type="color" :disabled="formData.beaconLit" v-model="formData.color" class="full-width colorpicker" />
-            </div>
-          </div>
+          <color-modal
+            field="color"
+            :color.sync="formData.color"
+            :disabled="formData.beaconLit"
+          ></color-modal>
           <div class="additional-settings-wrapper text-center">
             <a @click.prevent="$refs.additionalSettingsModal.open">Additional settings</a>
           </div>
           <q-field
             class="text-center toggle-field"
           >
+            {{formData.beaconLit}}
             <q-toggle
               @change="toggleBeacon"
               :disable="$v.formData.$invalid"
@@ -272,6 +270,7 @@ import UserService from 'services/userService.js'
 import Toast from 'mixins/Toast.js'
 import Helper from 'mixins/Helper.js'
 import ConnectionSquare from 'components/snippets/connectionSquare/ConnectionSquare'
+import ColorModal from 'components/snippets/colorModal/ColorModal'
 
 export default {
   name: 'Beacon',
@@ -296,22 +295,15 @@ export default {
     QPagination,
     QAutocomplete,
     QCheckbox,
-    ConnectionSquare
+    ConnectionSquare,
+    ColorModal
   },
   data () {
     return {
-      formData: {
-        name: '',
-        description: '',
-        color: this.$store.state.user.settings.defaultColor || '#FF0000',
-        beaconLit: this.doesObjectExist(this.$store.state.user.beacon),
-        location: {
-          type: 'Point',
-          coordinates: []
-        },
-        address: '',
-        author: this.$store.state.user._id,
-        additionalSettings: null
+      currentLocation: {
+        type: 'Point',
+        coordinates: [],
+        address: null
       },
       correctAddressData: {
         address: '',
@@ -336,10 +328,38 @@ export default {
       minPages: 1,
       loading: false,
       addressLoading: false,
-      correctAddressModalLoading: false
+      correctAddressModalLoading: false,
+      beaconCopy: null
     }
   },
   computed: {
+    formData () {
+      if (this.doesObjectExist(this.$store.state.user.beacon)) {
+        let beacon = JSON.parse(JSON.stringify(this.$store.state.user.beacon))
+        beacon.beaconLit = false
+        this.beaconCopy = JSON.parse(JSON.stringify(beacon))
+        beacon.beaconLit = true
+        return beacon
+      }
+      else {
+        return this.beaconCopy || {
+          name: '',
+          description: '',
+          color: this.$store.state.user.settings.defaultColor || '#D50000',
+          beaconLit: false,
+          location: {
+            type: 'Point',
+            coordinates: [
+              this.currentLocation.coordinates[0],
+              this.currentLocation.coordinates[1]
+            ]
+          },
+          address: this.currentLocation.address,
+          author: this.$store.state.user._id,
+          additionalSettings: null
+        }
+      }
+    },
     user () {
       return (this.$store.state.user) ? this.$store.state.user : false
     },
@@ -399,6 +419,11 @@ export default {
     }
   },
   methods: {
+    openCorrectAddressModal () {
+      if (!this.formData.beaconLit) {
+        this.$refs.correctAddressModal.open()
+      }
+    },
     getSlice (arr) {
       if (this.page === 1) {
         return arr.slice(0, 10)
@@ -571,7 +596,7 @@ export default {
                   message = 'It is HIGHLY recommended to allow your browser to access geolocation. If you choose not to allow access, your location will be far less accurate. Access to geolocation can be changed at any time in your browser settings.'
                 }
                 else {
-                  message = 'We were unable to get your location through geolocation. Your location will be less accurate because of this.'
+                  message = 'We were unable to get your location through geolocation. Your location will be less accurate.'
                 }
                 Dialog.create({
                   title: 'Warning',
@@ -737,8 +762,8 @@ export default {
       this.formData.beaconLit = true
     }
     this.getCurrentLocation(this).then((response) => {
-      this.formData.location.coordinates[0] = response.body.location.lng
-      this.formData.location.coordinates[1] = response.body.location.lat
+      this.currentLocation.coordinates[0] = response.body.location.lng
+      this.currentLocation.coordinates[1] = response.body.location.lat
       let geocodingObj = {
         lat: response.body.location.lat,
         lng: response.body.location.lng,
@@ -755,17 +780,17 @@ export default {
               }
             }
             if (correctedAddress) {
-              this.formData.address = correctedAddress.address
-              this.formData.location.coordinates[0] = correctedAddress.lng
-              this.formData.location.coordinates[1] = correctedAddress.lat
+              this.currentLocation.address = correctedAddress.address
+              this.currentLocation.coordinates[0] = correctedAddress.lng
+              this.currentLocation.coordinates[1] = correctedAddress.lat
             }
             else {
-              this.formData.address = response.body
+              this.currentLocation.address = response.body
             }
             this.addressLoading = false
           }
           else {
-            this.formData.address = this.$store.state.user.beacon.address
+            this.currentLocation.address = this.$store.state.user.beacon.address
           }
           this.addressLoading = false
         })
