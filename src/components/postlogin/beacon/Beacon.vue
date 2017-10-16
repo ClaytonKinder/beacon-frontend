@@ -147,7 +147,7 @@
                 <q-input
                   ref="correctAddressInput"
                   type="text"
-                  v-model.trim="correctAddressData.address"
+                  v-model="correctAddressData.address"
                   @blur="$v.correctAddressData.address.$touch()"
                   float-label="Corrected Address"
                   :disable="formData.beaconLit"
