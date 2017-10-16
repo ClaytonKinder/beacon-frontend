@@ -155,8 +155,9 @@ export default {
   @import '~variables'
   .postlogin-page-wrapper
     width 500px
-    max-width 90vw
-  .layout-aside
+    max-width 90vw  
+  .layout-aside,
+  .layout-backdrop
     bottom auto !important
     height 100%
   .stepper-wrapper
