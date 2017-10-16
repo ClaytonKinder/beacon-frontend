@@ -15,6 +15,8 @@ export default {}
   html
     max-width 100vw
     overflow-x hidden
+  body
+    height 100vh
   body.with-modal
     padding-right 0px !important
   .color-white

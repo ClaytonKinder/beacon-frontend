@@ -156,8 +156,6 @@ export default {
   .postlogin-page-wrapper
     width 500px
     max-width 90vw
-  .layout-aside.transition-generic
-    transition transform 0.3s
   .stepper-wrapper
     position absolute
     top 0
