@@ -156,6 +156,9 @@ export default {
   .postlogin-page-wrapper
     width 500px
     max-width 90vw
+  .layout-aside
+    bottom auto !important
+    height 100%
   .stepper-wrapper
     position absolute
     top 0
