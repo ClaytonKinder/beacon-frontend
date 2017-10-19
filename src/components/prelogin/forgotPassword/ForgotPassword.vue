@@ -17,6 +17,9 @@
             float-label="Email"
           />
         </q-field>
+        <div>
+          <small><a @click="$router.push('/login')">Wait, I remembered it!</a></small>
+        </div>
         <div class="button-wrapper text-center">
           <q-btn :disabled="$v.formData.$invalid" type="submit" color="primary">
             Submit

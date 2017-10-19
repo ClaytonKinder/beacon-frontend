@@ -36,7 +36,7 @@
         >
           <div class="q-toolbar-title row justify-start align-center">
             <img class="circular profile on-left" :src="selectedBeacon.author.gravatar" />
-            <div class="modal-header-name row items-center" :style="{color: checkLightOrDarkText()}">
+            <div class="modal-header-name row items-center text-white">
               {{selectedBeacon.author.firstName}}
             </div>
           </div>
@@ -164,11 +164,6 @@ import Helper from 'mixins/Helper.js'
 import LocationService from 'services/locationService.js'
 import ConnectionService from 'services/connectionService.js'
 import ConnectionSquare from 'components/snippets/connectionSquare/ConnectionSquare'
-
-function hexToRgb (hex) {
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null
-}
 
 export default {
   name: 'map',
@@ -520,20 +515,6 @@ export default {
           this.modalLoading = false
           this.createToast('negative', error.body.message)
         })
-    },
-    checkLightOrDarkText () {
-      let rgb = hexToRgb(this.selectedBeacon.color)
-      let C = [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255]
-      C.forEach((c) => {
-        if (c <= 0.03928) {
-          c = c / 12.92
-        }
-        else {
-          c = Math.pow((c + 0.055) / 1.055, 2.4)
-        }
-      })
-      let l = 0.2126 * C[0] + 0.7152 * C[1] + 0.0722 * C[2]
-      return (l > 0.179) ? '#0C0C0C' : '#FFF'
     },
     generateMarkerSize (c, w = 21, h = 34) {
       let multiplier = 1
