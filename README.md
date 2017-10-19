@@ -1,6 +1,16 @@
-# Beacon (frontend)
+![Beacon header](/src/assets/images/readme-header.png)
 
-> An app for connecting with those around you
+# [Beacon](https://www.beaconapp.fun)
+
+> An app for connecting people with those around them
+
+## Screenshots
+
+[Album of Beacon screenshots](https://imgur.com/a/09qxb)
+
+## Backend Code
+
+[Backend code repository](https://github.com/ClaytonKinder/beacon-backend)
 
 ## Build Setup
 
