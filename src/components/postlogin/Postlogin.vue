@@ -140,7 +140,9 @@ export default {
         this.showStepper = true
       }
       else {
-        this.$refs.tutorialTourModal.open()
+        if (this.$refs.tutorialTourModal) {
+          this.$refs.tutorialTourModal.open()
+        }
       }
     }
   },
