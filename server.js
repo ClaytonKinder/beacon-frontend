@@ -5,7 +5,7 @@ var serveStatic = require('serve-static');
 
 app = express();
 var redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
-app.use(redirectToHTTPS([/localhost:(\d{4})/], [/\/insecure/]));
+app.use(redirectToHTTPS([/localhost:(\d{4})/]));
 app.use(history());
 app.use(serveStatic(path.join(__dirname, 'dist')));
 var port = process.env.PORT || 5000;
