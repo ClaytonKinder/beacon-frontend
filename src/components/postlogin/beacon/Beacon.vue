@@ -199,8 +199,8 @@
               >
               </q-field>
               <q-radio v-model="additionalSettings.genderRestriction" :val="null" label="Everyone" :disable="formData.beaconLit" /><br/>
-              <q-radio v-model="additionalSettings.genderRestriction" val="maleOnly" label="Males only" :disable="formData.beaconLit" /><br/>
-              <q-radio v-model="additionalSettings.genderRestriction" val="femaleOnly" label="Females only" :disable="formData.beaconLit" />
+              <q-radio v-model="additionalSettings.genderRestriction" val="maleOnly" label="Males" :disable="formData.beaconLit" /><br/>
+              <q-radio v-model="additionalSettings.genderRestriction" val="femaleOnly" label="Females" :disable="formData.beaconLit" />
 
               <q-field
                 :label="'Age Range (' + additionalSettings.ageRange.min + ' to ' + additionalSettings.ageRange.max + ')'"
