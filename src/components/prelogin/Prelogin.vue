@@ -7,9 +7,7 @@
     <div class="row justify-center">
       <div class="prelogin-page-wrapper">
         <div class="prelogin-page window-width bg-light column items-center no-wrap">
-          <div class="prelogin-header bg-lighthouse flex items-center justify-center">
-
-          </div>
+          <div class="prelogin-header bg-lighthouse flex items-center justify-center"></div>
           <router-view></router-view>
         </div>
       </div>
@@ -41,6 +39,7 @@ export default {
     padding-bottom 100px
     .bg-lighthouse
       background url('~/assets/images/lighthouse.jpg') 50% 40%
+      background-size cover
     .prelogin-header
       height 50vh
       width 100%
