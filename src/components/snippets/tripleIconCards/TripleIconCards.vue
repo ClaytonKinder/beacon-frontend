@@ -96,6 +96,7 @@ export default {
     margin-top 100px
     padding 0 2rem
     .info-card
+      background white
       margin-bottom 4rem
       .info-icon
         padding-top 0.5rem
